@@ -1,0 +1,40 @@
+{
+  "name": "@shinyaigeek/kamu-core",
+  "version": "0.1.0",
+  "description": "Chew documents (markdown, text, HTML, PDF, URL) into the shape you actually want to read them in — flipbooks, slides, quizzes, kinetic animations — with an LLM.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./ingest": { "types": "./dist/ingest/index.d.ts", "default": "./dist/ingest/index.js" },
+    "./llm": { "types": "./dist/llm/index.d.ts", "default": "./dist/llm/index.js" },
+    "./render": { "types": "./dist/render/index.d.ts", "default": "./dist/render/index.js" }
+  },
+  "files": ["dist", "LICENSE", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "keywords": ["llm", "reading", "flipbook", "slides", "quiz", "pdf", "markdown", "anthropic", "claude"],
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/kamu#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/kamu.git",
+    "directory": "packages/core"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/kamu/issues" },
+  "engines": { "node": ">=22" },
+  "peerDependencies": {
+    "@anthropic-ai/claude-agent-sdk": ">=0.1.0",
+    "unpdf": ">=0.12.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-agent-sdk": { "optional": true },
+    "unpdf": { "optional": true }
+  },
+  "publishConfig": { "access": "public" }
+}

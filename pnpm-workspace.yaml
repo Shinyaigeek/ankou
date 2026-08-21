@@ -1,0 +1,21 @@
+packages:
+  - 'packages/*'
+
+# --- Supply-chain hardening -------------------------------------------------
+
+# Only these packages may run install/lifecycle scripts. Everything else is
+# blocked, so a compromised transitive dependency cannot execute code on
+# `pnpm install`.
+allowBuilds:
+  '@biomejs/biome': true
+
+# Do not adopt a version until it has been on the registry for this many
+# minutes (7 days). A malicious release is usually yanked well within a week,
+# so the cooldown keeps it out of the lockfile in the first place.
+minimumReleaseAge: 10080
+
+# Verify installed dependencies match the lockfile before running any script.
+verifyDepsBeforeRun: warn
+
+auditConfig:
+  ignoreGhsas: []

@@ -1,0 +1,37 @@
+{
+  "name": "kamu",
+  "version": "0.1.0",
+  "description": "Feed it markdown, text, HTML, PDFs or URLs, say what you want out of them, and read the result as a flipbook, deck, quiz, animation or summary.",
+  "type": "module",
+  "bin": { "kamu": "./dist/cli.js" },
+  "main": "./dist/cli.js",
+  "files": ["dist", "LICENSE", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/cli.js"
+  },
+  "keywords": ["cli", "llm", "reading", "flipbook", "slides", "quiz", "pdf", "claude"],
+  "author": "Shinyaigeek",
+  "license": "MIT",
+  "homepage": "https://github.com/Shinyaigeek/kamu#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shinyaigeek/kamu.git",
+    "directory": "packages/cli"
+  },
+  "bugs": { "url": "https://github.com/Shinyaigeek/kamu/issues" },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "@shinyaigeek/kamu-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/claude-agent-sdk": ">=0.1.0",
+    "unpdf": ">=0.12.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-agent-sdk": { "optional": true },
+    "unpdf": { "optional": true }
+  },
+  "publishConfig": { "access": "public" }
+}
