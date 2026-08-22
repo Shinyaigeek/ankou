@@ -104,7 +104,7 @@ export const summary: FormatModule<'summary'> = {
     'catching up on something quickly',
   ],
   params: {
-    depth: '"brief" or "thorough".',
+    depth: { type: 'string', description: '"brief" or "thorough".' },
   },
 
   async compose(context): Promise<SummaryPiece> {

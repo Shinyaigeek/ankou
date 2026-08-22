@@ -17,6 +17,19 @@ export interface ComposeContext {
   signal?: AbortSignal
 }
 
+/**
+ * A knob the planner may set, and the CLI may override with `--param`.
+ *
+ * The type is here rather than in the planner's schema because the registry has
+ * to be the only place a format is described: a schema kept in step by hand
+ * drifts the moment someone adds a format, and a knob missing from it cannot be
+ * set at all — a provider's grammar drops an undeclared property in silence.
+ */
+export interface FormatParam {
+  type: 'integer' | 'string'
+  description: string
+}
+
 export interface FormatModule<F extends FormatId = FormatId> {
   id: F
   label: string
@@ -25,7 +38,7 @@ export interface FormatModule<F extends FormatId = FormatId> {
   /** Concrete reader intents this format is the right answer to. */
   bestFor: string[]
   /** Knobs the planner may set in `plan.params`, documented for the prompt. */
-  params: Record<string, string>
+  params: Record<string, FormatParam>
   compose(context: ComposeContext): Promise<Extract<Piece, { format: F }>>
 }
 

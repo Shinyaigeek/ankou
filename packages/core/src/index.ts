@@ -28,6 +28,7 @@ export {
   FORMAT_IDS,
   FORMATS,
   type FormatModule,
+  type FormatParam,
   getFormat,
   isFormatId,
   isPiece,

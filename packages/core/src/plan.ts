@@ -1,29 +1,37 @@
 import { FORMAT_IDS, FORMATS } from './formats/index.js'
 import { ask } from './llm/index.js'
-import type { LLM } from './llm/types.js'
+import type { JsonSchema, LLM } from './llm/types.js'
 import { S } from './schema/validate.js'
 import type { Document, FormatId, Plan } from './types.js'
 import { charCount } from './util/text.js'
+
+/**
+ * Every knob any format declares, as one object the planner may fill.
+ *
+ * Derived from the registry rather than written out, because a hand-kept copy
+ * fails silently: the menu the model reads is built from `format.params`, so a
+ * new knob appears in the prompt, but a provider's grammar drops any property
+ * the schema does not declare. The planner would ask for it and never get it.
+ *
+ * The namespace is flat and shared — `param()` reads `plan.params` by name — so
+ * two formats naming the same knob must mean the same thing by it.
+ */
+function paramsSchema(): JsonSchema {
+  const properties: Record<string, JsonSchema> = {}
+  for (const id of FORMAT_IDS) {
+    for (const [key, knob] of Object.entries(FORMATS[id].params)) {
+      properties[key] =
+        knob.type === 'integer' ? S.integer(knob.description) : S.string(knob.description)
+    }
+  }
+  return S.object(properties, [], 'Only the knobs that belong to the chosen format. Omit the rest.')
+}
 
 const PLAN_SCHEMA = S.object(
   {
     format: S.enum(FORMAT_IDS, 'The output format that best serves the reader.'),
     rationale: S.string('One or two sentences, addressed to the reader, on why this shape fits.'),
-    params: S.object(
-      {
-        slideCount: S.integer(),
-        questionCount: S.integer(),
-        sceneCount: S.integer(),
-        baseMs: S.integer(),
-        difficulty: S.integer(),
-        depth: S.string(),
-        tone: S.string(),
-        pace: S.string(),
-        level: S.string(),
-      },
-      [],
-      'Only the knobs that belong to the chosen format. Omit the rest.',
-    ),
+    params: paramsSchema(),
   },
   ['format', 'rationale'],
 )
@@ -32,7 +40,7 @@ function menu(): string {
   return FORMAT_IDS.map((id) => {
     const format = FORMATS[id]
     const params = Object.entries(format.params)
-      .map(([key, description]) => `      ${key}: ${description}`)
+      .map(([key, knob]) => `      ${key} (${knob.type}): ${knob.description}`)
       .join('\n')
     return `- ${id}: ${format.description}
     Best for:

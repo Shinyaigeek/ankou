@@ -122,8 +122,8 @@ export const quiz: FormatModule<'quiz'> = {
     'active recall instead of passive rereading',
   ],
   params: {
-    questionCount: 'How many questions to produce.',
-    difficulty: '1 = recall, 2 = understanding, 3 = application.',
+    questionCount: { type: 'integer', description: 'How many questions to produce.' },
+    difficulty: { type: 'integer', description: '1 = recall, 2 = understanding, 3 = application.' },
   },
 
   async compose(context): Promise<QuizPiece> {

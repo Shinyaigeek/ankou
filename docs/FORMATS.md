@@ -83,3 +83,10 @@ not writing a report.
 
 `description` and `bestFor` are not documentation: they are the planner's menu.
 Write them for the model as much as for the reader.
+
+`params` is the same kind of thing. Each knob declares a `type` and a
+`description`, and the planner's schema is built from the registry, so a new knob
+is settable the moment it is declared — there is no second list to keep in step.
+That matters more than it looks: a provider's grammar drops any property the
+schema does not declare and says nothing, so a knob missing from it would be one
+the planner asks for and never receives.

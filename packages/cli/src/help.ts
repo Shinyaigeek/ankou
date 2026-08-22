@@ -83,7 +83,7 @@ ${format.bestFor.map((use) => `    - ${use}`).join('\n')}
 ${
   params.length
     ? `\n  ${c('Params:', palette.muted)}\n${params
-        .map(([key, description]) => `    --param ${key}=…  ${description}`)
+        .map(([key, knob]) => `    --param ${key}=…  ${knob.description}`)
         .join('\n')}`
     : ''
 }

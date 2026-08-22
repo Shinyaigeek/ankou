@@ -72,8 +72,8 @@ export const animation: FormatModule<'animation'> = {
     'sharing something so other people actually watch it',
   ],
   params: {
-    sceneCount: 'How many scenes.',
-    pace: '"slow", "medium" or "fast".',
+    sceneCount: { type: 'integer', description: 'How many scenes.' },
+    pace: { type: 'string', description: '"slow", "medium" or "fast".' },
   },
 
   async compose(context): Promise<AnimationPiece> {

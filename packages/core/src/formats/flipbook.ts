@@ -166,7 +166,7 @@ export const flipbook: FormatModule<'flipbook'> = {
     'staying focused on a text you keep bouncing off',
   ],
   params: {
-    baseMs: 'Milliseconds per character; lower is faster.',
+    baseMs: { type: 'integer', description: 'Milliseconds per character; lower is faster.' },
   },
 
   async compose(context): Promise<FlipbookPiece> {

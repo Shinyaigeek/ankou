@@ -94,8 +94,8 @@ export const slides: FormatModule<'slides'> = {
     'reviewing something you have read before',
   ],
   params: {
-    slideCount: 'Roughly how many slides to produce.',
-    tone: 'e.g. "casual", "academic", "executive".',
+    slideCount: { type: 'integer', description: 'Roughly how many slides to produce.' },
+    tone: { type: 'string', description: 'e.g. "casual", "academic", "executive".' },
   },
 
   async compose(context): Promise<SlidesPiece> {

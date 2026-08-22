@@ -54,7 +54,10 @@ export const dialogue: FormatModule<'dialogue'> = {
     'surfacing the objections a straight explanation glosses over',
   ],
   params: {
-    level: 'Assumed background: "beginner", "intermediate", "expert".',
+    level: {
+      type: 'string',
+      description: 'Assumed background: "beginner", "intermediate", "expert".',
+    },
   },
 
   async compose(context): Promise<DialoguePiece> {

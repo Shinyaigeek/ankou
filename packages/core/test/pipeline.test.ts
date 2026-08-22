@@ -4,6 +4,7 @@ import {
   chew,
   chewPlan,
   FORMAT_IDS,
+  FORMATS,
   isPiece,
   KamuError,
   render,
@@ -459,4 +460,27 @@ test('the deck answers a hash that arrives after it has loaded', async () => {
   // A slide number in the URL is an address; it has to work when someone pastes
   // one into a deck that is already open, not only on a cold load.
   assert.match(html, /addEventListener\('hashchange'/)
+})
+
+test('every knob a format declares is one the planner is allowed to set', async () => {
+  // A provider's grammar drops any property the schema does not declare, and
+  // says nothing about it. So a knob the menu advertises but the schema omits is
+  // a knob the planner can ask for and never receive — silently, forever.
+  let planSchema: any
+  const capture = {
+    ...stubLlm(),
+    async structured<T>(request: any): Promise<T> {
+      if (request.name === 'reading_plan') planSchema = request.schema
+      return stubLlm().structured<T>(request)
+    },
+  }
+  await chew({ sources: [{ content: SOURCE }], intent: '要点', llm: capture as never })
+
+  const allowed = planSchema.properties.params.properties
+  for (const id of FORMAT_IDS) {
+    for (const [key, knob] of Object.entries(FORMATS[id].params)) {
+      assert.ok(allowed[key], `${id} advertises \`${key}\` but the planner cannot set it`)
+      assert.equal(allowed[key].type, knob.type, `${id}.${key}: type disagrees with the schema`)
+    }
+  }
 })
