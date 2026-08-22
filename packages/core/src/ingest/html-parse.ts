@@ -55,30 +55,80 @@ const AUTO_CLOSE: Record<string, string[]> = {
   option: ['option'],
 }
 
+/**
+ * HTML 4's Latin-1 entities are exactly codepoints 160–255, in order, so the
+ * table is a list of names rather than 96 hand-typed pairs.
+ */
+const LATIN1 =
+  'nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml'
+
 const ENTITIES: Record<string, string> = {
   amp: '&',
   lt: '<',
   gt: '>',
   quot: '"',
   apos: "'",
-  nbsp: ' ',
-  mdash: '—',
+  // Typography and symbols outside Latin-1 that turn up constantly in prose.
+  ensp: '\u2002',
+  emsp: '\u2003',
+  thinsp: '\u2009',
+  zwnj: '\u200c',
+  zwj: '\u200d',
   ndash: '–',
-  hellip: '…',
-  laquo: '«',
-  raquo: '»',
-  copy: '©',
-  reg: '®',
-  trade: '™',
+  mdash: '—',
   lsquo: '‘',
   rsquo: '’',
+  sbquo: '‚',
   ldquo: '“',
   rdquo: '”',
+  bdquo: '„',
+  dagger: '†',
+  Dagger: '‡',
   bull: '•',
-  middot: '·',
+  hellip: '…',
+  permil: '‰',
+  prime: '′',
+  Prime: '″',
+  lsaquo: '‹',
+  rsaquo: '›',
+  oline: '‾',
+  frasl: '⁄',
+  euro: '€',
+  trade: '™',
+  larr: '←',
+  uarr: '↑',
+  rarr: '→',
+  darr: '↓',
+  harr: '↔',
+  minus: '−',
+  lowast: '∗',
+  ne: '≠',
+  le: '≤',
+  ge: '≥',
+  infin: '∞',
+  radic: '√',
+  asymp: '≈',
+  equiv: '≡',
+  sum: '∑',
+  prod: '∏',
+  part: '∂',
+  int: '∫',
   deg: '°',
-  times: '×',
 }
+for (const [index, name] of LATIN1.split(' ').entries()) {
+  ENTITIES[name] = String.fromCodePoint(0xa0 + index)
+}
+// `&nbsp;` is a space as far as reading is concerned, not U+00A0 — every
+// downstream measure of "how much text is this" would otherwise be off.
+ENTITIES.nbsp = ' '
+ENTITIES.shy = ''
+
+/**
+ * Names HTML allows shouted. The rest are case-sensitive on purpose: `&Eacute;`
+ * and `&eacute;` are different letters, and folding them was quietly turning É
+ * into é.
+ */
+const CASE_INSENSITIVE = new Set(['amp', 'lt', 'gt', 'quot', 'copy', 'reg', 'trade', 'nbsp'])
 
 export function decodeEntities(input: string): string {
   return input.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, (whole, body: string) => {
@@ -91,7 +141,10 @@ export function decodeEntities(input: string): string {
         ? String.fromCodePoint(code)
         : whole
     }
-    return ENTITIES[body.toLowerCase()] ?? whole
+    const lowered = body.toLowerCase()
+    return (
+      ENTITIES[body] ?? (CASE_INSENSITIVE.has(lowered) ? ENTITIES[lowered] : undefined) ?? whole
+    )
   })
 }
 

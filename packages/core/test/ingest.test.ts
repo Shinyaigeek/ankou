@@ -127,3 +127,20 @@ test('a client-rendered shell is reported instead of chewed', async () => {
     /renders its content with JavaScript|characters of text/,
   )
 })
+
+test('entities beyond the common few are decoded, and case is respected', () => {
+  const page = (body: string) =>
+    documentFromHtml(
+      `<html><body><article><p>${body} ${'pad '.repeat(60)}</p></article></body></html>`,
+      'x',
+    )
+
+  assert.ok(page('caf&eacute; na&iuml;ve 50&yen; &sect;3').text.startsWith('café naïve 50¥ §3'))
+  assert.ok(
+    page('&Eacute;cole &amp; &copy; &euro;5 &rarr; &frac12;').text.startsWith('École & © €5 → ½'),
+  )
+  // `&Eacute;` and `&eacute;` are different letters; folding them lost one.
+  assert.ok(page('&Eacute;/&eacute;').text.startsWith('É/é'))
+  // A name that is not an entity is left exactly as it was written.
+  assert.ok(page('&notareal; x').text.startsWith('&notareal; x'))
+})
