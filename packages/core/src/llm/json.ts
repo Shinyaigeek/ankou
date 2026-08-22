@@ -2,17 +2,15 @@ import { llmError } from '../errors.js'
 import { validate } from '../schema/validate.js'
 import type { JsonSchema, LLM, StructuredRequest } from './types.js'
 
-/** Pull the first balanced JSON object or array out of a model response. */
-export function extractJson(raw: string): string | null {
-  const fenced = /```(?:json)?\s*\n([\s\S]*?)```/i.exec(raw)
-  const text = fenced ? fenced[1]! : raw
-
-  const start = text.search(/[{[]/)
-  if (start === -1) return null
-
-  let depth = 0
+/**
+ * Walk a JSON fragment and report where it ended up: balanced at `end`, or
+ * still inside `stack` levels of nesting because the text ran out.
+ */
+function scan(text: string, start: number): { end: number; stack: string[]; inString: boolean } {
+  const stack: string[] = []
   let inString = false
   let escaped = false
+
   for (let i = start; i < text.length; i++) {
     const ch = text[i]!
     if (inString) {
@@ -22,13 +20,70 @@ export function extractJson(raw: string): string | null {
       continue
     }
     if (ch === '"') inString = true
-    else if (ch === '{' || ch === '[') depth++
+    else if (ch === '{' || ch === '[') stack.push(ch)
     else if (ch === '}' || ch === ']') {
-      depth--
-      if (depth === 0) return text.slice(start, i + 1)
+      stack.pop()
+      if (stack.length === 0) return { end: i + 1, stack, inString: false }
     }
   }
+  return { end: -1, stack, inString }
+}
+
+/**
+ * Close a fragment a model cut short mid-value.
+ *
+ * Small local models run out of tokens in the middle of a long array far more
+ * often than they emit malformed JSON, and throwing away 90% of a good reply
+ * because its tail is missing is worse than keeping the part that arrived. So
+ * the tail is trimmed back to the last element boundary, the open structures are
+ * closed, and the result only counts if it actually parses.
+ */
+function closeTruncated(text: string, start: number): string | null {
+  const MAX_TRIMS = 64
+  let fragment = text.slice(start)
+
+  for (let attempt = 0; attempt <= MAX_TRIMS; attempt++) {
+    const state = scan(fragment, 0)
+    if (state.stack.length > 0) {
+      const body = (state.inString ? `${fragment}"` : fragment).replace(/[\s,:]+$/, '')
+      const closers = state.stack
+        .map((open) => (open === '{' ? '}' : ']'))
+        .reverse()
+        .join('')
+      const candidate = body + closers
+      try {
+        const parsed: unknown = JSON.parse(candidate)
+        // A fragment that recovers nothing — `{` closed into `{}` — is not a
+        // repair, it is an empty answer wearing the right brackets.
+        if (Object.keys(parsed as object).length > 0) return candidate
+        return null
+      } catch {
+        // Cut back past the last element boundary and try again.
+      }
+    }
+    const comma = fragment.lastIndexOf(',')
+    if (comma <= 0) return null
+    fragment = fragment.slice(0, comma)
+  }
   return null
+}
+
+/**
+ * Pull the first balanced JSON object or array out of a model response.
+ *
+ * A reply that was cut off before it closed is repaired rather than rejected —
+ * see `closeTruncated`.
+ */
+export function extractJson(raw: string): string | null {
+  const fenced = /```(?:json)?\s*\n([\s\S]*?)```/i.exec(raw)
+  const text = fenced ? fenced[1]! : raw
+
+  const start = text.search(/[{[]/)
+  if (start === -1) return null
+
+  const { end } = scan(text, start)
+  if (end !== -1) return text.slice(start, end)
+  return closeTruncated(text, start)
 }
 
 function schemaPrompt(prompt: string, schema: JsonSchema): string {
