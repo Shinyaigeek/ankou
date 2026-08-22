@@ -37,10 +37,23 @@ async function extract(
  * lines that run the full width of the text block are continuations, and a line
  * noticeably shorter than the measure is the end of its paragraph.
  */
+/** A well-formed roman numeral, so that `civil` and `ill` are words again. */
+const ROMAN = /^(?=[ivxlcdm])m*(c[md]|d?c{0,3})(x[cl]|l?x{0,3})(i[xv]|v?i{0,3})$/i
+
+const looksLikeFolio = (line: string) => /^\d{1,4}$/.test(line) || ROMAN.test(line)
+
 export function reflowPdfText(page: string): string {
   const lines = page.split('\n').map((line) => line.trim())
   const measure = lines.reduce((longest, line) => Math.max(longest, line.length), 0)
   if (measure === 0) return ''
+
+  // A folio sits at the top or the bottom of the page. Anywhere else, a lone
+  // number is content — a year in a bibliography, a figure in a table — and
+  // deleting it changes what the source says. Measured on a real paper: every
+  // page number was within two lines of an edge, and every false positive was
+  // not.
+  const filled = lines.flatMap((line, index) => (line ? [index] : []))
+  const edges = new Set([...filled.slice(0, 2), ...filled.slice(-2)])
 
   const out: string[] = []
   let buffer = ''
@@ -50,13 +63,12 @@ export function reflowPdfText(page: string): string {
     buffer = ''
   }
 
-  for (const line of lines) {
+  for (const [index, line] of lines.entries()) {
     if (!line) {
       flush()
       continue
     }
-    // A page number or a lone folio on its own line is noise.
-    if (/^[0-9ivxlcIVXLC]{1,6}$/.test(line)) continue
+    if (edges.has(index) && looksLikeFolio(line)) continue
 
     // Headings sit far inside the measure and carry no terminal punctuation.
     const isHeading = !buffer && line.length <= measure * 0.5 && !/[.。!！?？,、;:]$/.test(line)

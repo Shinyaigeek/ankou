@@ -216,3 +216,34 @@ test('a hint inside html or body never deletes the page', () => {
   assert.ok(document.charCount > 400, `lost the page: ${document.charCount} characters`)
   assert.ok(document.text.includes('Positions of the armies'))
 })
+
+test('a folio is stripped at the edge of a page, not wherever a number appears', () => {
+  // Measured on a real paper: every page number sat within two lines of an
+  // edge, and every false positive did not. The bibliography of "Attention Is
+  // All You Need" was losing its years to this.
+  const page = [
+    'References',
+    'Some prose that runs on for a while and then keeps going a bit further still.',
+    'Vaswani et al.',
+    '2009',
+    'Journal of Things',
+    '2009',
+    'Another entry that runs on for a while and keeps going a little bit further.',
+    'Bengio et al.',
+    '13',
+  ].join('\n')
+  const flowed = reflowPdfText(page)
+  assert.ok(!/(^|\n)13(\n|$)/.test(flowed), 'the page number survived')
+  assert.equal((flowed.match(/2009/g) ?? []).length, 2, 'a year in the body was eaten as a folio')
+})
+
+test('a roman numeral is a folio; a word made of the same letters is not', () => {
+  const page = (first: string) => reflowPdfText([first, 'Body text follows here.'].join('\n'))
+  assert.ok(!page('iv').includes('iv'), 'iv should be read as a folio')
+  assert.ok(!page('xlii').includes('xlii'), 'xlii should be read as a folio')
+  // `civil`, `ill` and `lil` are made only of roman-numeral letters, and were
+  // being deleted for it.
+  for (const word of ['civil', 'ill', 'lil', 'vill']) {
+    assert.ok(page(word).includes(word), `${word} was deleted as a folio`)
+  }
+})
