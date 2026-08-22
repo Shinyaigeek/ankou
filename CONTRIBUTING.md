@@ -87,6 +87,13 @@ worth ten paragraphs of description. If the output was wrong rather than broken,
 Please **do not** open a public issue for a vulnerability. See
 [SECURITY.md](./SECURITY.md).
 
+## Changelog and releases
+
+Anything a user would notice goes in [CHANGELOG.md](./CHANGELOG.md) under
+`Unreleased`, in the same PR as the change. Cutting a release is a maintainer
+job and lives in [docs/RELEASING.md](./docs/RELEASING.md): both packages share a
+version, and a `v*` tag publishes them.
+
 ## License
 
 By contributing, you agree that your contributions are licensed under the

@@ -1,0 +1,136 @@
+name: Release
+
+# Tag a commit `v<version>` and this publishes both packages to npm and opens a
+# GitHub Release for it. `workflow_dispatch` runs the same thing as a rehearsal:
+# everything up to and including a `--dry-run` publish, nothing sent for real.
+#
+# See docs/RELEASING.md for the human half of it.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # Same gate as CI. A release is not the place to find out lint is red.
+      - run: pnpm check
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: node examples/gallery.mjs
+
+      - name: Read the version, and make the tag agree with it
+        id: version
+        run: |
+          set -eu
+          version=$(node -p "require('./packages/core/package.json').version")
+          for pkg in packages/core packages/cli; do
+            found=$(node -p "require('./$pkg/package.json').version")
+            if [ "$found" != "$version" ]; then
+              echo "::error::$pkg is $found; packages/core is $version. Release them together." >&2
+              exit 1
+            fi
+          done
+          if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
+            tagged=${GITHUB_REF_NAME#v}
+            if [ "$tagged" != "$version" ]; then
+              echo "::error::tag $GITHUB_REF_NAME does not match version $version." >&2
+              exit 1
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # pnpm rewrites `workspace:*` into the real version as it packs, which is
+      # why the tarballs are built here rather than published from the tree.
+      - name: Pack
+        id: pack
+        run: |
+          set -eu
+          out=$RUNNER_TEMP/release
+          mkdir -p "$out"
+          for pkg in packages/core packages/cli; do
+            ( cd "$pkg" && pnpm pack --pack-destination "$out" )
+          done
+          ls -l "$out"
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          OUT: ${{ steps.pack.outputs.dir }}
+          # A manual run rehearses; only a tag publishes for real.
+          DRY: ${{ github.event_name == 'workflow_dispatch' && '--dry-run' || '' }}
+        run: |
+          set -eu
+          # core first: the CLI depends on the version being on the registry.
+          for tarball in \
+            "$OUT/shinyaigeek-kamu-core-$VERSION.tgz" \
+            "$OUT/shinyaigeek-kamu-$VERSION.tgz"; do
+            npm publish "$tarball" --access public --provenance $DRY
+          done
+
+      - name: Keep the tarballs with the run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kamu-${{ steps.version.outputs.version }}-tarballs
+          path: ${{ steps.pack.outputs.dir }}/*.tgz
+          retention-days: 14
+
+  github-release:
+    needs: publish
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # the release itself
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: kamu-${{ needs.publish.outputs.version }}-tarballs
+          path: tarballs
+      - name: Open the release, with this version's changelog as the notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          set -eu
+          # The section between this version's heading and the next one.
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[?" v "\\]?" { on = 1; next }
+            on && /^## / { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "no CHANGELOG section for $VERSION; falling back to generated notes" >&2
+            gh release create "$GITHUB_REF_NAME" tarballs/*.tgz --title "v$VERSION" --generate-notes
+          else
+            gh release create "$GITHUB_REF_NAME" tarballs/*.tgz --title "v$VERSION" --notes-file notes.md
+          fi
