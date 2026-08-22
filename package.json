@@ -15,8 +15,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
     "@shinyaigeek/kamu-core": "workspace:*",
-    "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=22"
