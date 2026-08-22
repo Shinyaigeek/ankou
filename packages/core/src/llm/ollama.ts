@@ -2,6 +2,28 @@ import { llmError } from '../errors.js'
 import { parseAndValidate, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
+/**
+ * A non-2xx reply from the daemon, as opposed to not reaching it at all.
+ *
+ * The difference matters: a daemon that rejects a request can often be asked a
+ * different way, whereas a daemon that is not there cannot, and quietly
+ * degrading the second case into a retry only buys a worse error message later.
+ */
+class DaemonRejected extends Error {
+  constructor(
+    readonly status: number,
+    readonly detail: string,
+  ) {
+    super(`Ollama returned HTTP ${status}.`)
+    this.name = 'DaemonRejected'
+  }
+}
+
+const asLlmError = (cause: unknown): unknown =>
+  cause instanceof DaemonRejected
+    ? llmError(cause.message, cause.detail.slice(0, 400) || undefined)
+    : cause
+
 /** Local models through the Ollama daemon. No key, no cost, no network egress. */
 export function ollama(options: ProviderOptions = {}): LLM {
   const model = options.model ?? process.env.KAMU_MODEL ?? 'qwen3:8b'
@@ -21,14 +43,14 @@ export function ollama(options: ProviderOptions = {}): LLM {
         body: JSON.stringify({ ...body, stream: false }),
       })
     } catch (cause) {
+      if (signal?.aborted) throw cause
       throw llmError(
         `Cannot reach Ollama at ${baseUrl}: ${(cause as Error).message}`,
         'Start it with `ollama serve`, or point OLLAMA_HOST somewhere else.',
       )
     }
     if (!response.ok) {
-      const detail = await response.text().catch(() => '')
-      throw llmError(`Ollama returned HTTP ${response.status}.`, detail.slice(0, 400) || undefined)
+      throw new DaemonRejected(response.status, await response.text().catch(() => ''))
     }
     return (await response.json()) as { message?: { content?: string } }
   }
@@ -38,22 +60,24 @@ export function ollama(options: ProviderOptions = {}): LLM {
     { role: 'user', content: request.prompt },
   ]
 
+  const tuning = (request: CompleteRequest) => ({
+    temperature: request.temperature ?? options.temperature ?? 0.4,
+    num_predict: request.maxTokens ?? options.maxTokens ?? 8192,
+  })
+
   return {
     name: `ollama:${model}`,
 
     async complete(request: CompleteRequest): Promise<string> {
-      const result = await call(
-        {
-          model,
-          messages: messages(request),
-          options: {
-            temperature: request.temperature ?? options.temperature ?? 0.4,
-            num_predict: request.maxTokens ?? options.maxTokens ?? 8192,
-          },
-        },
-        request.signal,
-      )
-      return result.message?.content ?? ''
+      try {
+        const result = await call(
+          { model, messages: messages(request), options: tuning(request) },
+          request.signal,
+        )
+        return result.message?.content ?? ''
+      } catch (cause) {
+        throw asLlmError(cause)
+      }
     },
 
     async structured<T>(request: StructuredRequest<T>): Promise<T> {
@@ -64,10 +88,7 @@ export function ollama(options: ProviderOptions = {}): LLM {
             model,
             messages: messages(request),
             format: { ...request.schema, type: 'object' },
-            options: {
-              temperature: request.temperature ?? options.temperature ?? 0.4,
-              num_predict: request.maxTokens ?? options.maxTokens ?? 8192,
-            },
+            options: tuning(request),
           },
           request.signal,
         )
@@ -77,8 +98,10 @@ export function ollama(options: ProviderOptions = {}): LLM {
         const attempt = parseAndValidate<T>(result.message?.content ?? '', request.schema)
         if (attempt.value !== undefined) return attempt.value
         priorErrors = attempt.errors
-      } catch {
-        // Older daemons reject a schema in `format`; prompt instead.
+      } catch (cause) {
+        // Older daemons reject a schema in `format`; ask them in prose instead.
+        // Anything else — no daemon, an aborted run — is a real failure.
+        if (!(cause instanceof DaemonRejected)) throw cause
       }
       return structuredViaPrompt(this as LLM, request, priorErrors)
     },

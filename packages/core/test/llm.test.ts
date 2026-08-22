@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { anthropic, ollama, S } from '../dist/index.js'
+import { anthropic, KamuError, ollama, S } from '../dist/index.js'
 import { extractJson, structuredViaPrompt } from '../dist/llm/json.js'
 
 const PACING = S.object(
@@ -88,6 +88,31 @@ test('ollama carries a near-miss from the schema path into the prompt path', asy
   assert.equal(calls[1]?.format, undefined, 'the fallback should ask in prose')
   const retry = (calls[1]!.messages as { content: string }[]).at(-1)!.content
   assert.ok(retry.includes('must be >= 8'), 'the fallback should not start the model over blind')
+})
+
+test('ollama falls back when the daemon rejects the schema, not when it is absent', async () => {
+  const rejects = fakeFetch([
+    { status: 400, body: 'unsupported format' },
+    ollamaSays('{"baseMs":60}'),
+  ])
+  const value = await ollama({ model: 'test', fetchImpl: rejects.impl }).structured!<{
+    baseMs: number
+  }>({ name: 'pacing', schema: PACING, prompt: 'pace it' })
+  assert.equal(value.baseMs, 60)
+
+  const unreachable = (async () => {
+    throw new TypeError('fetch failed')
+  }) as unknown as typeof fetch
+  await assert.rejects(
+    () =>
+      ollama({ model: 'test', fetchImpl: unreachable }).structured!({
+        name: 'pacing',
+        schema: PACING,
+        prompt: 'pace it',
+      }),
+    (error: unknown) =>
+      error instanceof KamuError && /Cannot reach Ollama/.test((error as Error).message),
+  )
 })
 
 test('anthropic repairs an out-of-range tool result instead of abandoning the run', async () => {
