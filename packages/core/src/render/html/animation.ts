@@ -37,6 +37,20 @@ body { height: 100dvh; overflow: hidden; background: var(--bg-sunken); }
 @keyframes anCaret { 50% { opacity: 0; } }
 .an-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(128,128,128,.2); }
 .an-progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s linear; }
+/*
+ * One scene is on stage at a time and the rest live in the data island, so a
+ * printed page would carry a single line. Print gets a plain reading of every
+ * scene instead — kinetic type does not survive paper anyway.
+ */
+.an-print { display: none; }
+@media print {
+  .an-stage, .an-hint, .an-progress { display: none !important; }
+  .an-print { display: block; }
+  .an-print section { margin: 0 0 1.6em; page-break-inside: avoid; }
+  .an-print p { margin: 0 0 .2em; line-height: 1.4; }
+  .an-print p.xl { font-size: 1.6rem; font-weight: 600; }
+  .an-print p.lg { font-size: 1.25rem; font-weight: 600; }
+}
 .an-hint {
   position: fixed; left: 50%; bottom: 1.4rem; transform: translateX(-50%);
   font-size: .74rem; color: var(--fg-faint); letter-spacing: .06em; pointer-events: none;
@@ -128,6 +142,29 @@ ${READ_DATA}
     }
   });
 
+  // Paper cannot hold a scene that moves, so it gets all of them, read straight
+  // through. Filled on idle: a beforeprint listener alone misses a headless
+  // print, and the reader should not wait for this before the first scene.
+  var printed = false;
+  function fillForPrint() {
+    if (printed) return;
+    printed = true;
+    var sheet = document.querySelector('.an-print');
+    scenes.forEach(function (scene) {
+      var section = document.createElement('section');
+      (scene.lines || []).forEach(function (line) {
+        var p = document.createElement('p');
+        p.className = line.scale || 'md';
+        p.textContent = line.text;
+        section.appendChild(p);
+      });
+      sheet.appendChild(section);
+    });
+  }
+  window.addEventListener('beforeprint', fillForPrint);
+  if (window.requestIdleCallback) window.requestIdleCallback(fillForPrint, { timeout: 2000 });
+  else setTimeout(fillForPrint, 300);
+
   setTimeout(function () { hint.classList.add('hide'); }, 2600);
   show(0);
 })();
@@ -145,6 +182,7 @@ export function renderAnimationHtml(
 <div class="an-stage m-fade" data-mood="calm"></div>
 <div class="an-hint">click or press space to pause · ← → to step</div>
 <div class="an-progress"><i></i></div>
+<div class="an-print" aria-hidden="true"></div>
 `,
   }
   return htmlDocument(

@@ -509,3 +509,22 @@ test('the flipbook carries its whole text into the page, not just the stage', as
   // template literal — a bare newline there is a syntax error on the page.
   assert.ok(html.includes(String.raw`split(/\n{2,}/)`), 'the paragraph split did not survive')
 })
+
+test('the animation puts every scene on paper, since paper cannot move', async () => {
+  const { piece } = await chew({
+    sources: [{ content: SOURCE }],
+    intent: 'make it land',
+    format: 'animation',
+    llm: stubLlm() as never,
+  })
+  const html = render(piece, 'html').content
+
+  assert.match(html, /class="an-print"/, 'no printable copy to fill')
+  assert.match(html, /@media print[\s\S]*\.an-print \{ display: block/, 'never shown in print')
+  assert.match(html, /addEventListener\('beforeprint'/, 'nothing fills it')
+  assert.match(
+    html,
+    /requestIdleCallback|setTimeout\(fillForPrint/,
+    'a headless print fires no event',
+  )
+})
