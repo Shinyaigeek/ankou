@@ -86,10 +86,19 @@ function startSession(options: PlayOptions): Session {
     }
   }
 
+  // Named so they can be taken off again: a session that ends normally must
+  // leave the process exactly as it found it, or an SDK caller playing a
+  // hundred pieces collects a hundred SIGINT handlers and Node's listener
+  // warning.
+  const onSigint = () => end()
+  const onAbort = () => end()
+
   const end = () => {
     if (ended) return
     ended = true
     input.off('data', onData)
+    process.off('SIGINT', onSigint)
+    options.signal?.removeEventListener('abort', onAbort)
     if (input.isTTY) input.setRawMode(false)
     input.pause()
     output.write(screen.exit)
@@ -101,8 +110,8 @@ function startSession(options: PlayOptions): Session {
   input.setEncoding('utf8')
   input.on('data', onData)
   output.write(screen.enter)
-  process.once('SIGINT', end)
-  options.signal?.addEventListener('abort', end, { once: true })
+  process.once('SIGINT', onSigint)
+  options.signal?.addEventListener('abort', onAbort, { once: true })
 
   const session: Session = {
     get columns() {

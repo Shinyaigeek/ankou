@@ -190,6 +190,23 @@ test('the quiz grades what you actually answered', async () => {
   )
 })
 
+test('a session leaves the process as it found it', async () => {
+  const before = process.listenerCount('SIGINT')
+  for (let round = 0; round < 3; round++) {
+    const screen = harness()
+    const done = playTui(PIECES[4]!, {
+      input: screen.input,
+      output: screen.output,
+      colour: false,
+    })
+    screen.press(KEY.quit)
+    await done
+  }
+  // Each play used to leave its SIGINT handler behind, so an SDK caller playing
+  // a hundred pieces collected a hundred of them and Node's listener warning.
+  assert.equal(process.listenerCount('SIGINT'), before)
+})
+
 test('an empty emphasis term does not hang the player', () => {
   // `indexOf('')` answers `from` forever. A piece can arrive from anywhere —
   // `kamu render piece.json --play` reads one off disk — so this has to be a
