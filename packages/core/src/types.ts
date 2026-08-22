@@ -29,6 +29,8 @@ export type Source =
       content?: string
       /** Display name; defaults to the basename / hostname. */
       name?: string
+      /** Force the character encoding, when the source does not declare one. */
+      encoding?: string
     }
 
 export interface Section {

@@ -34,6 +34,11 @@ export {
   isPiece,
 } from './formats/index.js'
 export {
+  charsetFromBom,
+  charsetFromContentType,
+  charsetFromMeta,
+  type DecodeOptions,
+  decodeBytes,
   type IngestOptions,
   ingest,
   ingestAll,

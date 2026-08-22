@@ -2,11 +2,13 @@ import { readFile } from 'node:fs/promises'
 import { basename, extname } from 'node:path'
 import { ingestError } from '../errors.js'
 import type { Document, Source, SourceKind } from '../types.js'
+import { decodeBytes } from './decode.js'
 import { documentFromHtml } from './html.js'
 import { documentFromMarkdown } from './markdown.js'
 import { documentFromPdf } from './pdf.js'
 import { documentFromText } from './text.js'
 
+export * from './decode.js'
 export * from './html.js'
 export * from './markdown.js'
 export * from './pdf.js'
@@ -61,6 +63,8 @@ export interface IngestOptions {
   userAgent?: string
   /** Keep the entire page instead of extracting the readable part. */
   full?: boolean
+  /** Character encoding for sources that declare none. A source's own wins. */
+  encoding?: string
 }
 
 const DEFAULT_UA = 'kamu/0.1 (+https://github.com/Shinyaigeek/kamu) reader-bot'
@@ -90,7 +94,12 @@ function assertNotEmptyShell(document: Document, htmlLength: number): void {
   )
 }
 
-async function ingestUrl(url: string, options: IngestOptions, hop = 0): Promise<Document> {
+async function ingestUrl(
+  url: string,
+  options: IngestOptions,
+  encoding: string | undefined,
+  hop = 0,
+): Promise<Document> {
   const doFetch = options.fetchImpl ?? fetch
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000)
@@ -111,13 +120,18 @@ async function ingestUrl(url: string, options: IngestOptions, hop = 0): Promise<
       const document = await documentFromPdf(bytes, url, name)
       return { ...document, origin: { kind: 'url', ref: url } }
     }
-    const body = await response.text()
+    // `response.text()` is always UTF-8, whatever the page says it is.
+    const body = decodeBytes(new Uint8Array(await response.arrayBuffer()), url, {
+      ...(encoding ? { declared: encoding } : {}),
+      transport: mime,
+      html: kind === 'html',
+    })
 
     if (kind === 'html' && hop < 2) {
       const target = metaRefreshTarget(body, url)
       if (target && target !== url) {
         clearTimeout(timer)
-        return ingestUrl(target, options, hop + 1)
+        return ingestUrl(target, options, encoding, hop + 1)
       }
     }
 
@@ -144,7 +158,8 @@ export async function ingest(source: Source, options: IngestOptions = {}): Promi
         : { path: source }
       : source
 
-  if (descriptor.url) return ingestUrl(descriptor.url, options)
+  const encoding = descriptor.encoding ?? options.encoding
+  if (descriptor.url) return ingestUrl(descriptor.url, options, encoding)
 
   if (descriptor.content !== undefined) {
     const kind = descriptor.kind ?? kindFromContent(descriptor.content)
@@ -169,7 +184,10 @@ export async function ingest(source: Source, options: IngestOptions = {}): Promi
   }
 
   if (kind === 'pdf') return documentFromPdf(new Uint8Array(bytes), path, name)
-  const content = bytes.toString('utf8')
+  const content = decodeBytes(new Uint8Array(bytes), path, {
+    ...(encoding ? { declared: encoding } : {}),
+    html: kind === 'html',
+  })
   // A path with an unhelpful extension still deserves a sniff.
   const resolved =
     descriptor.kind ?? EXT_KIND[extname(path).toLowerCase()] ?? kindFromContent(content)

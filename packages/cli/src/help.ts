@@ -47,6 +47,7 @@ ${c('OPTIONS', ansi.bold)}
       --param k=v         Format knob; repeatable. See \`kamu formats\`.
       --window <chars>    Source characters per model call (default: 24000).
       --timeout <ms>      URL fetch timeout (default: 30000).
+      --encoding <name>   Character encoding for sources that declare none.
       --full              Keep the whole HTML page instead of extracting.
       --plan-only         Print the plan and stop, without generating.
   -q, --quiet             No progress output.

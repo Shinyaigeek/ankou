@@ -30,6 +30,7 @@ const VALUED = new Set([
   'window',
   'param',
   'timeout',
+  'encoding',
 ])
 
 const REPEATABLE = new Set(['param'])

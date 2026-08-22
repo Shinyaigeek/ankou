@@ -108,6 +108,10 @@ Sources are file paths, URLs, or `-` for stdin. A URL is fetched and stripped
 down to the readable part (a dependency-free Readability-style extractor, so
 navigation and cookie banners do not end up in your flipbook).
 
+Text is decoded by what the source declares — a BOM, a `Content-Type`, a
+`<meta charset>` — and a source that declares nothing and is not UTF-8 is
+refused rather than mangled. `--encoding shift_jis` says it for them.
+
 ```sh
 -i, --intent <text>    What you want out of it. This is the brief.
 -f, --format <id>      Skip the planner and pick the shape yourself.
@@ -118,6 +122,7 @@ navigation and cookie banners do not end up in your flipbook).
 -p, --provider <id>    anthropic | openai | ollama | claude-code
 -m, --model <id>       Model name for that provider.
     --param k=v        Format knob, repeatable: --param slideCount=12
+    --encoding <name>  Character encoding for a source that declares none.
     --plan-only        Print what it would make and stop, without making it.
 
 `kamu render <piece.json>` renders a piece saved earlier onto another surface.

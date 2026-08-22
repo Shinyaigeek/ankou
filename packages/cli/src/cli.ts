@@ -178,6 +178,7 @@ async function main(argv: string[]): Promise<number> {
     ingest: {
       full: flagBool(args, 'full') ?? false,
       timeoutMs: Number(flagString(args, 'timeout') ?? 30_000),
+      ...(flagString(args, 'encoding') ? { encoding: flagString(args, 'encoding') } : {}),
     },
     onProgress: (event: { message: string }) => spinner.update(event.message),
     signal: controller.signal,
