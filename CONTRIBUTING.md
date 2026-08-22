@@ -63,6 +63,11 @@ Prompts are code here. If you change one:
 - do not add "be helpful"-style padding. Every line in a prompt should change an
   output.
 
+The test suite runs against a stub model, so it proves the shapes hold and says
+nothing about whether a real model fills them well. `.claude/skills/kamu/` drives
+a real run end to end — which provider to reach for, how to check the result, and
+what each failure means — if you work with Claude Code.
+
 ## Pull requests
 
 - One change per PR. A bug fix and a refactor are two PRs.
