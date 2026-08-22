@@ -105,7 +105,10 @@ function pickMainContent(root: ElementNode): ElementNode {
   let bestScore = 0
   for (const candidate of candidates) {
     const value = score(candidate)
-    // Ties go to the deeper node so we do not keep the whole <body>.
+    // `walk` is pre-order, so a container is always weighed before the things
+    // inside it, and a child has to be clearly better — not merely equal — to
+    // be preferred. Descending into a wrapper that adds nothing costs the
+    // headline or the first paragraph and gains nothing back.
     if (value > bestScore * 1.05) {
       best = candidate
       bestScore = value
