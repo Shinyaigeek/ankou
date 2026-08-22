@@ -38,6 +38,14 @@ const BOILERPLATE_HINT =
 const CONTENT_HINT =
   /(^|[\s_-])(article|content|post|entry|main|story|body-copy|markdown|prose|readme)([\s_-]|$)/i
 
+/**
+ * Elements that say, structurally, that they are the page. A class name is a
+ * weaker claim than the tag, so a hint matched inside one of these — Wikipedia
+ * ships `<html class="vector-feature-language-in-header-enabled">` — must never
+ * be allowed to delete the document.
+ */
+const NEVER_CHROME = new Set(['html', 'body', 'main', 'article'])
+
 function isHidden(node: ElementNode): boolean {
   if (node.attrs.hidden !== undefined) return true
   if (node.attrs['aria-hidden'] === 'true') return true
@@ -51,8 +59,12 @@ function prune(root: ElementNode): void {
       if (child.type !== 'element') return true
       if (BOILERPLATE.has(child.tag)) return false
       if (isHidden(child)) return false
+      if (NEVER_CHROME.has(child.tag)) return true
       const hint = `${child.attrs.class ?? ''} ${child.attrs.id ?? ''} ${child.attrs.role ?? ''}`
-      if (BOILERPLATE_HINT.test(hint) && !CONTENT_HINT.test(hint)) return false
+      // A content word used to rescue anything it appeared beside, which BEM
+      // makes useless: `article-footer__links` names the article and means the
+      // footer, and MDN's whole page footer rode into the text on it.
+      if (BOILERPLATE_HINT.test(hint)) return false
       return true
     })
   })

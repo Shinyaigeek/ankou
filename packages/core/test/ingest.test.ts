@@ -185,3 +185,34 @@ test('a saved shell is reported too, since saving one is the advice we give', as
     (error: unknown) => /characters of text/.test((error as Error).message),
   )
 })
+
+test('a footer named after the article is still a footer', () => {
+  // BEM makes a content word worthless as a rescue: `article-footer__links`
+  // names the article and means the footer. MDN's page footer rode in on it.
+  const body = `<p>${'Real prose that belongs to the reader. '.repeat(12)}</p>`
+  const chrome = `
+    <div class="article-footer__contribute"><a href="/x">Learn how to contribute</a></div>
+    <p class="article-footer__last-modified">This page was last modified on Aug 21.</p>
+    <div class="post-nav"><a href="/prev">Previous</a> <a href="/next">Next</a></div>`
+  const document = documentFromHtml(
+    `<html><body><main id="content"><article>${body}${chrome}</article></main></body></html>`,
+    'x',
+  )
+  assert.ok(document.text.includes('Real prose that belongs to the reader.'))
+  for (const leak of ['Learn how to contribute', 'last modified', 'Previous']) {
+    assert.ok(!document.text.includes(leak), `chrome leaked: ${leak}`)
+  }
+})
+
+test('a hint inside html or body never deletes the page', () => {
+  // Wikipedia ships <html class="vector-feature-language-in-header-enabled">.
+  // Matching `header` there once cost the entire article.
+  const prose = 'Positions of the armies, and the messengers between them. '.repeat(10)
+  const document = documentFromHtml(
+    `<html class="vector-feature-language-in-header-enabled"><body class="page-header-offset">
+       <main id="content"><p>${prose}</p></main></body></html>`,
+    'x',
+  )
+  assert.ok(document.charCount > 400, `lost the page: ${document.charCount} characters`)
+  assert.ok(document.text.includes('Positions of the armies'))
+})
