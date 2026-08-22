@@ -8,6 +8,7 @@ import {
   joinedText,
   mapWindows,
   param,
+  requireContent,
   scaleToLength,
   systemPrompt,
   titleOf,
@@ -138,6 +139,8 @@ ${chunk}
           ...(toVisual(slide.visual) ? { visual: toVisual(slide.visual) } : {}),
         })),
     )
+
+    requireContent(merged.length, 'slides')
 
     return {
       format: 'slides',

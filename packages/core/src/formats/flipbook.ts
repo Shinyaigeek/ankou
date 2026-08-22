@@ -1,3 +1,4 @@
+import { composeError } from '../errors.js'
 import { ask } from '../llm/index.js'
 import { S } from '../schema/validate.js'
 import type { Document, FlipbookChapter, FlipbookPiece } from '../types.js'
@@ -169,7 +170,12 @@ export const flipbook: FormatModule<'flipbook'> = {
   },
 
   async compose(context): Promise<FlipbookPiece> {
+    // Unlike every other format the body here is the source itself, so an empty
+    // flipbook means there was nothing to read, not that the model gave up.
     const chapters = chaptersFromDocuments(context.documents)
+    if (chapters.length === 0) {
+      throw composeError('The sources have no text to play back.')
+    }
     const annotations = await annotate(context, chapters)
 
     const titled = chapters.map((chapter, index) => ({

@@ -7,6 +7,7 @@ import {
   type FormatModule,
   mapWindows,
   param,
+  requireContent,
   systemPrompt,
   titleOf,
 } from './base.js'
@@ -139,18 +140,26 @@ ${chunk}
       }
     }
 
+    const keyPoints = (final.keyPoints ?? []).filter((point) => point.text?.trim())
+    // One outline entry per window arrives whether or not the model filled it,
+    // so counting the entries would let an empty digest through.
+    const outline = partials
+      .map((partial) => ({
+        title: partial.sectionTitle ?? '',
+        summary: partial.summary ?? '',
+        points: partial.points ?? [],
+      }))
+      .filter((section) => section.summary.trim() || section.points.length)
+    requireContent((final.tldr?.trim() ? 1 : 0) + keyPoints.length + outline.length, 'summary')
+
     return {
       format: 'summary',
       title: final.title?.trim() || titleOf(context),
       lang: context.lang,
       meta: baseMeta(context),
       tldr: final.tldr ?? '',
-      keyPoints: (final.keyPoints ?? []).filter((point) => point.text?.trim()),
-      outline: partials.map((partial) => ({
-        title: partial.sectionTitle ?? '',
-        summary: partial.summary ?? '',
-        points: partial.points ?? [],
-      })),
+      keyPoints,
+      outline,
       glossary: [...glossary].map(([term, definition]) => ({ term, definition })),
       openQuestions: final.openQuestions ?? [],
     }

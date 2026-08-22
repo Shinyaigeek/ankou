@@ -8,6 +8,7 @@ import {
   joinedText,
   mapWindows,
   param,
+  requireContent,
   scaleToLength,
   systemPrompt,
   titleOf,
@@ -164,6 +165,8 @@ ${chunk}
       .filter((question): question is Omit<Question, 'id'> => question !== null)
       .slice(0, total)
       .map((question, index) => ({ id: `q${index + 1}`, ...question }))
+
+    requireContent(questions.length, 'questions')
 
     return {
       format: 'quiz',

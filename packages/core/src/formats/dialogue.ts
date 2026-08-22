@@ -1,7 +1,15 @@
 import { ask } from '../llm/index.js'
 import { S } from '../schema/validate.js'
 import type { DialoguePiece } from '../types.js'
-import { baseMeta, type FormatModule, mapWindows, param, systemPrompt, titleOf } from './base.js'
+import {
+  baseMeta,
+  type FormatModule,
+  mapWindows,
+  param,
+  requireContent,
+  systemPrompt,
+  titleOf,
+} from './base.js'
 
 const DIALOGUE_SCHEMA = S.object(
   {
@@ -107,6 +115,8 @@ ${chunk}
         previous = speaker
         return { speaker, text: turn.text.trim() }
       })
+
+    requireContent(turns.length, 'dialogue')
 
     return {
       format: 'dialogue',

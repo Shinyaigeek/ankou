@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { chew, chewPlan, FORMAT_IDS, render, renderTuiText, validate } from '../dist/index.js'
+import {
+  chew,
+  chewPlan,
+  FORMAT_IDS,
+  KamuError,
+  render,
+  renderTuiText,
+  validate,
+} from '../dist/index.js'
 
 const SOURCE = `# 契約書の第一条
 
@@ -360,4 +368,51 @@ test('dialogue turns land on a real speaker even when the model drifts', async (
     // and it falls back to whoever did not just speak.
     ['seito', 'sensei', 'seito', 'sensei'],
   )
+})
+
+test('a format refuses to hand back an empty piece', async () => {
+  // What an exhausted model looks like: every schema satisfied, nothing in it.
+  const empty: Record<string, unknown> = {
+    reading_plan: { format: 'summary', rationale: '', params: {} },
+    slide_deck: { title: '', slides: [] },
+    quiz: { questions: [] },
+    animation: { title: '', scenes: [] },
+    summary_part: { sectionTitle: '', summary: '', points: [], terms: [] },
+    summary: { title: '', tldr: '   ', keyPoints: [], openQuestions: [] },
+    dialogue: {
+      title: '',
+      speakers: [
+        { id: 'a', name: 'A', role: 'r' },
+        { id: 'b', name: 'B', role: 'r' },
+      ],
+      turns: [],
+    },
+    flipbook_annotations: {
+      title: '',
+      chapterTitles: [],
+      emphasis: [],
+      ruby: [],
+      pacing: { baseMs: 60 },
+    },
+  }
+  const exhausted = {
+    name: 'stub:empty',
+    async complete() {
+      return '{}'
+    },
+    async structured<T>(request: any): Promise<T> {
+      assert.ok(request.name in empty, `no empty answer for ${request.name}`)
+      return empty[request.name] as T
+    },
+  }
+
+  for (const format of FORMAT_IDS) {
+    // Flipbook's body is the source, not the model, so starve it of the source.
+    const sources = format === 'flipbook' ? [{ content: '   \n\n  ' }] : [{ content: SOURCE }]
+    await assert.rejects(
+      () => chew({ sources, intent: 'x', format, llm: exhausted as never }),
+      (error: unknown) => error instanceof KamuError,
+      `${format} rendered an empty piece instead of failing`,
+    )
+  }
 })

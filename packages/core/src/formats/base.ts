@@ -1,3 +1,4 @@
+import { composeError } from '../errors.js'
 import type { LLM } from '../llm/types.js'
 import type { Document, FormatId, OnProgress, Piece, PieceBase, Plan } from '../types.js'
 import { charCount, windows } from '../util/text.js'
@@ -114,4 +115,21 @@ export function clamp(value: number, min: number, max: number): number {
 /** A sensible number of output units for a document of this size. */
 export function scaleToLength(text: string, unitsPer1000Chars: number, min: number, max: number) {
   return clamp(Math.round((charCount(text) / 1000) * unitsPer1000Chars), min, max)
+}
+
+/**
+ * Refuse to hand back a piece with nothing in it.
+ *
+ * Every renderer will lay out an empty page quite happily — a deck with no
+ * slides, a quiz that reads "0 questions · pass mark 1" — so a model that
+ * returned nothing usable reaches the reader as a finished-looking file. Failing
+ * here costs them a rerun; not failing costs them the ability to trust that a
+ * file kamu wrote means anything.
+ */
+export function requireContent(count: number, what: string): void {
+  if (count > 0) return
+  throw composeError(
+    `The model returned no usable ${what}.`,
+    'A small local model often needs a second attempt; a larger one usually does not. `--render json` shows what came back.',
+  )
 }

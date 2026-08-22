@@ -8,6 +8,7 @@ import {
   joinedText,
   mapWindows,
   param,
+  requireContent,
   scaleToLength,
   systemPrompt,
   titleOf,
@@ -125,6 +126,8 @@ ${chunk}
         holdMs: clamp(Math.round(scene.holdMs ?? 1600), 300, 8000),
         mood: scene.mood ?? 'calm',
       }))
+
+    requireContent(scenes.length, 'scenes')
 
     return {
       format: 'animation',
