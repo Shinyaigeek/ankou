@@ -8,6 +8,20 @@ CLI flags and the `Piece` shapes may still move in a minor release.
 
 ## Unreleased
 
+### Added
+
+- **A site**: [shinyaigeek.github.io/kamu](https://shinyaigeek.github.io/kamu/),
+  built from this repository on every push to `main`. Every format is embedded
+  live on it, rendered by `examples/gallery.mjs`, so the tour cannot drift from
+  what the renderers emit.
+
+### Fixed
+
+- **`--theme auto` follows the reader again.** The rendered HTML applied its
+  dark palette to anyone without an explicit choice, including readers whose
+  system asks for light: the dark block was missing its
+  `prefers-color-scheme` guard.
+
 ## 0.1.0 — 2026-08-22
 
 First public release.

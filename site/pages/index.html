@@ -1,0 +1,333 @@
+<section class="section hero">
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">噛む — to chew</p>
+      <h1>Read it in the shape<br>you actually want<span class="kanji" aria-hidden="true">噛</span></h1>
+      <p class="lede">
+        You have a spec, a PDF, a long post. What you want out of it is not always
+        the text, top to bottom.
+      </p>
+      <p>
+        kamu takes the sources <strong>and what you want out of them</strong>, picks
+        the shape, and gives it back as something you can actually read — a flipbook,
+        a deck, a quiz you have to pass, four seconds of kinetic type. One command,
+        or one call from your agent.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="#install">Install it</a>
+        <a class="btn" href="./formats.html">See what comes out</a>
+        <a class="btn" href="https://github.com/Shinyaigeek/kamu" rel="noreferrer">GitHub</a>
+      </div>
+      <div class="badges">
+        <a href="https://github.com/Shinyaigeek/kamu/actions/workflows/ci.yml" rel="noreferrer"><img alt="CI status" src="https://github.com/Shinyaigeek/kamu/actions/workflows/ci.yml/badge.svg"></a>
+      </div>
+      <p class="muted" style="margin-top:.9rem;font-size:.92rem">
+        MIT · Node 22+ · <code>kamu-core</code> has no runtime dependencies
+      </p>
+    </div>
+
+    <div class="stage" data-chooser>
+      <div class="stage-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span>kamu spec.md --intent …</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-label">What you want out of it</p>
+        <p class="stage-intent" data-intent-line></p>
+        <div class="stage-result" data-result hidden>
+          <p class="stage-format"><span class="arrow">→</span><span data-format></span></p>
+          <p class="stage-why" data-why></p>
+          <a class="card-more" data-demo-link href="./formats.html">see it →</a>
+        </div>
+      </div>
+      <div class="chips">
+        <button class="chip" type="button"
+          data-intent="一字一句漏らさず頭に入れたい"
+          data-format="flipbook"
+          data-why="Nothing may be summarised, so the model only annotates and the text is sliced verbatim out of the source."
+          data-demo="./demo/flipbook.html">一字一句</button>
+        <button class="chip" type="button"
+          data-intent="I need to remember this next week"
+          data-format="quiz"
+          data-why="Active recall beats rereading, so you get questions, answers, explanations, and the quote that settles each one."
+          data-demo="./demo/quiz.html">remember it</button>
+        <button class="chip" type="button"
+          data-intent="Is this 40-page paper worth my afternoon?"
+          data-format="summary"
+          data-why="Map-reduce over the whole document: TL;DR, key points, a per-section outline, a glossary, and what it leaves open."
+          data-demo="./demo/summary.html">triage it</button>
+        <button class="chip" type="button"
+          data-intent="Explain it to me like I have never seen it"
+          data-format="dialogue"
+          data-why="Two voices — one explaining, one asking the awkward question you would have asked."
+          data-demo="./demo/dialogue.html">explain it</button>
+        <button class="chip" type="button"
+          data-intent="Make this land in four seconds"
+          data-format="animation"
+          data-why="Kinetic typography, timed and moving. The one format allowed to be selective: it is cutting a trailer."
+          data-demo="./demo/animation.html">make it land</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="install">
+  <div class="section-head">
+    <p class="eyebrow">Start here</p>
+    <h2>Three commands and a document</h2>
+    <p class="lede">Node 22+. No build step, no config file to write, no account to make.</p>
+  </div>
+
+  <div class="split wide-right">
+    <div>
+      <ol class="steps">
+        <li>
+          <h3>Install the CLI</h3>
+          <p class="muted">
+            The unscoped <code>kamu</code> on npm is an unrelated package, hence the
+            scope — what it installs is still <code>kamu</code>.
+          </p>
+        </li>
+        <li>
+          <h3>Point it at a model</h3>
+          <p class="muted">
+            Any of four providers, or none of them: <code>kamu providers</code> says
+            which are ready on this machine and what the rest are missing.
+            <a href="./providers.html">All the routes →</a>
+          </p>
+        </li>
+        <li>
+          <h3>Say what you want out of it</h3>
+          <p class="muted">
+            The intent is the brief, in whatever language you think in. It is what the
+            planner reads to pick a shape — and <code>--plan-only</code> shows you that
+            decision before you pay for the generation.
+          </p>
+        </li>
+      </ol>
+    </div>
+
+    <div>
+      <div class="code"><pre><code><span class="cm"># the CLI, globally</span>
+npm i -g @shinyaigeek/kamu
+
+<span class="cm"># the SDK, in a project</span>
+npm i @shinyaigeek/kamu-core
+
+<span class="cm"># or from a checkout — also how you develop on it</span>
+git clone https://github.com/Shinyaigeek/kamu.git
+cd kamu &amp;&amp; ./scripts/install-local.sh</code></pre></div>
+
+      <div class="code"><pre><code><span class="cm"># whichever you have — the first key found wins</span>
+export ANTHROPIC_API_KEY=sk-...
+<span class="cm"># or: --provider claude-code   a Claude Code subscription, no key</span>
+<span class="cm"># or: --provider openai        OpenAI, OpenRouter, LM Studio, vLLM, Groq</span>
+<span class="cm"># or: --provider ollama        local, free, no network egress</span>
+
+kamu providers</code></pre></div>
+
+      <div class="code"><pre><code>kamu spec.md -i <span class="hl">"一字一句漏らさず頭に入れたい"</span>
+<span class="cm"># → flipbook: plays the text back one character at a time, verbatim</span>
+
+kamu https://example.com/post -i <span class="hl">"I need to remember this"</span> --play
+<span class="cm"># → quiz, in your terminal</span>
+
+kamu paper.pdf notes.md -i <span class="hl">"explain it like I have never seen it"</span>
+<span class="cm"># → dialogue: two voices working through it</span></code></pre></div>
+      <p class="muted">
+        Sources are file paths, URLs, or <code>-</code> for stdin. Markdown, text, HTML
+        and PDF are understood; a URL is fetched and stripped down to the readable part,
+        so navigation and cookie banners do not end up in your flipbook.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">How it works</p>
+    <h2>One model call, many surfaces</h2>
+    <p class="lede">
+      Ingest normalises the sources without rewriting them. The planner reads your
+      intent and picks the shape. Compose fills a format-specific schema. Rendering
+      is a pure function after that.
+    </p>
+  </div>
+
+  <div class="pipeline">
+    <div class="stagebox"><b>sources</b><span>md, txt, html, pdf, url, stdin</span></div>
+    <div class="stagebox"><b>ingest</b><span>text, headings, language — never rewritten</span></div>
+    <div class="stagebox"><b>plan</b><span>an LLM reads your intent and picks the shape</span></div>
+    <div class="stagebox"><b>compose</b><span>an LLM fills a format-specific schema</span></div>
+    <div class="stagebox piece"><b>Piece</b><span>typed JSON — the thing worth keeping</span></div>
+    <div class="stagebox"><b>render</b><span>html · tui · json</span></div>
+  </div>
+
+  <div class="split">
+    <div>
+      <p>
+        The middle artefact is a <strong>Piece</strong>: a typed, format-specific
+        structure. Renderers are pure functions of a Piece, so the same chewed result
+        can be played in a terminal, opened in a browser, or handed to another program
+        as JSON without asking the model to do the work twice.
+      </p>
+      <p>
+        Long documents are windowed, mapped per window and reduced, so a 200-page PDF
+        and a 400-word post go down the same path. Where a provider supports tool use
+        or structured output, kamu uses it; where it does not, output is parsed,
+        validated, and handed back with its own errors once.
+      </p>
+    </div>
+    <div>
+      <div class="code"><pre><code><span class="cm"># pay the model once…</span>
+kamu paper.pdf -i "覚えたい" --render json -o piece.json
+
+<span class="cm"># …and render it as often as you like</span>
+kamu render piece.json --open
+kamu render piece.json --play</code></pre></div>
+      <p class="muted">
+        <code>kamu render</code> touches no model and no network. The HTML it writes is
+        one self-contained file: no CDN, no fonts to fetch, no build step. It works
+        offline, follows the reader's colour scheme, prints sensibly, and you can mail
+        it to someone.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">The output</p>
+    <h2>Six shapes, all of them live on this site</h2>
+    <p class="lede">
+      Every card below opens the real thing — rendered by kamu from a fixed source,
+      embedded and playable. <a href="./formats.html">See them all in one place →</a>
+    </p>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="./formats.html#flipbook">
+      <p class="card-glyph">flipbook</p>
+      <h3>Every character, in order</h3>
+      <p class="muted">The source played back one character at a time, verbatim, with emphasis and ruby.</p>
+      <p class="card-more">Reach for it when wording matters →</p>
+    </a>
+    <a class="card" href="./formats.html#slides">
+      <p class="card-glyph">slides</p>
+      <h3>The shape of the argument</h3>
+      <p class="muted">One claim per slide, bullets, speaker notes, quotes and stats where they help.</p>
+      <p class="card-more">Reach for it when you are presenting →</p>
+    </a>
+    <a class="card" href="./formats.html#quiz">
+      <p class="card-glyph">quiz</p>
+      <h3>Does it actually stick?</h3>
+      <p class="muted">Questions that grade you, with explanations and the quote from the source that settles it.</p>
+      <p class="card-more">Reach for it before an exam →</p>
+    </a>
+    <a class="card" href="./formats.html#animation">
+      <p class="card-glyph">animation</p>
+      <h3>Kinetic typography</h3>
+      <p class="muted">Timed, moving text with a mood that sets the palette. Cinematic rather than exhaustive.</p>
+      <p class="card-more">Reach for it to make one idea land →</p>
+    </a>
+    <a class="card" href="./formats.html#summary">
+      <p class="card-glyph">summary</p>
+      <h3>A layered digest</h3>
+      <p class="muted">TL;DR, key points, a per-section outline, a glossary, and the questions left open.</p>
+      <p class="card-more">Reach for it to triage a long read →</p>
+    </a>
+    <a class="card" href="./formats.html#dialogue">
+      <p class="card-glyph">dialogue</p>
+      <h3>Two voices, one of them yours</h3>
+      <p class="muted">One explaining, one pushing back on the hand-waving. Revealed a turn at a time.</p>
+      <p class="card-more">Reach for it when you keep bouncing off →</p>
+    </a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="split">
+    <div>
+      <p class="eyebrow">The interesting constraint</p>
+      <h2>The flipbook never paraphrases</h2>
+      <p>
+        For a format whose whole promise is <em>一字一句</em> — every character — you
+        cannot let a language model write the body. So it doesn't.
+      </p>
+      <p>
+        The model gets to produce <strong>annotations only</strong>: chapter titles,
+        terms worth emphasising, readings for hard words, and a reading pace. The text
+        itself is sliced verbatim out of the source and exploded into grapheme clusters
+        by the renderer.
+      </p>
+      <div class="callout">
+        <p><strong>Fidelity is structural</strong>, not a promise the model has to keep.</p>
+      </div>
+      <p class="muted">
+        The same instinct runs through the rest of it: the planner's menu is generated
+        from the format registry, so a format cannot exist and be invisible to it, and a
+        knob cannot be declared and silently unsettable.
+      </p>
+    </div>
+    <div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/flipbook.html</span>
+          <span class="grow"></span>
+          <a href="./demo/flipbook.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/flipbook.html" title="A kamu flipbook, rendered" loading="lazy"></iframe>
+      </div>
+      <p class="muted" style="margin-top:.8rem">
+        Click into the frame, then <kbd>space</kbd> to play, <kbd>↑</kbd><kbd>↓</kbd> for
+        speed, <kbd>←</kbd><kbd>→</kbd> to step, <kbd>c</kbd> for chapters.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="cards">
+    <a class="card" href="./providers.html">
+      <p class="card-glyph">providers</p>
+      <h3>Bring the model you already have</h3>
+      <p class="muted">
+        Anthropic, any OpenAI-compatible endpoint, Ollama on localhost, or a Claude Code
+        subscription with no API key at all. Or pass your own client and kamu bills
+        through it.
+      </p>
+      <p class="card-more">Wiring up a provider →</p>
+    </a>
+    <a class="card" href="./agents.html">
+      <p class="card-glyph">agents</p>
+      <h3>It was built to be called by something else</h3>
+      <p class="muted">
+        A Piece is plain JSON and rendering is pure, so an agent can decide the shape,
+        store the structure, and re-render it on any surface later — with progress
+        events, cancellation, and errors that carry a hint.
+      </p>
+      <p class="card-more">kamu as a tool call →</p>
+    </a>
+    <a class="card" href="https://github.com/Shinyaigeek/kamu/blob/main/docs/ARCHITECTURE.md" rel="noreferrer">
+      <p class="card-glyph">internals</p>
+      <h3>No runtime dependencies</h3>
+      <p class="muted">
+        Providers are <code>fetch</code> calls; the HTML extractor, the JSON Schema
+        validator and the terminal layer are all in-tree. PDF and the Claude Agent SDK
+        are optional peers, imported lazily.
+      </p>
+      <p class="card-more">Read the architecture notes →</p>
+    </a>
+  </div>
+
+  <div class="callout" style="margin-top:2rem">
+    <p>
+      <strong>Status: early.</strong> 0.x, and the format set, the CLI flags and the
+      <code>Piece</code> shapes may still move in a minor release. Every format has been
+      run end to end against a real model, and the providers, the pipeline and the
+      renderers are covered by <code>pnpm test</code>.
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributions welcome</a>.
+    </p>
+  </div>
+</section>

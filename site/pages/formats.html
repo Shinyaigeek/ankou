@@ -1,0 +1,286 @@
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">The output</p>
+    <h1>What comes out</h1>
+    <p class="lede">
+      Six shapes. Every one below is embedded live — the same self-contained HTML
+      file kamu writes when you run it, rendered from one fixed source so you can
+      compare them against each other.
+    </p>
+  </div>
+
+  <div class="callout">
+    <p>
+      These pages were produced by <code>examples/gallery.mjs</code>, which walks every
+      registered format through the renderer with a <strong>stub model</strong>: no API
+      key, no tokens, no network. The structure, the interactions and the styling are
+      exactly what a real run gives you; only the content is canned — a miniature of
+      Rich Sutton's <em>The Bitter Lesson</em>.
+    </p>
+  </div>
+
+  <nav class="toc" aria-label="Formats">
+    <a href="#flipbook">flipbook</a>
+    <a href="#slides">slides</a>
+    <a href="#quiz">quiz</a>
+    <a href="#animation">animation</a>
+    <a href="#summary">summary</a>
+    <a href="#dialogue">dialogue</a>
+  </nav>
+</section>
+
+<section class="section">
+  <article class="format" id="flipbook">
+    <div class="format-head">
+      <h2>Flipbook</h2>
+      <code>--format flipbook</code>
+    </div>
+    <p class="lede">
+      Plays the source back one character at a time, verbatim, with emphasis and
+      readings. Nothing is summarised or dropped.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>baseMs</code> — milliseconds per character, lower is faster. The planner sets it from how dense the writing is; 40–90 is comfortable.</span></li>
+          <li><b>Reach for it</b><span>Reading every single word without skimming. Poetry, contracts, specs — anything where the wording is the point.</span></li>
+          <li><b>In a browser</b><span>Full-screen character stage with a running context strip. <kbd>space</kbd> plays, <kbd>←</kbd><kbd>→</kbd> step (hold <kbd>shift</kbd> for 20), <kbd>↑</kbd><kbd>↓</kbd> change speed, <kbd>c</kbd> opens the chapter sidebar.</span></li>
+          <li><b>In a terminal</b><span>The same tape, revealed into wrapped text with the current character marked.</span></li>
+        </ul>
+        <p class="muted">
+          The model only annotates — chapter titles, emphasis terms, ruby readings,
+          pacing. Punctuation and paragraph breaks get longer pauses than ordinary
+          characters, and emphasised terms are slowed slightly so they register.
+        </p>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/flipbook.html</span>
+          <span class="grow"></span>
+          <a href="./demo/flipbook.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/flipbook.html" title="Flipbook, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+
+  <article class="format" id="slides">
+    <div class="format-head">
+      <h2>Slides</h2>
+      <code>--format slides</code>
+    </div>
+    <p class="lede">
+      A deck: one claim per slide with supporting bullets and speaker notes. Good for
+      grasping the shape of an argument fast.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>slideCount</code>, <code>tone</code>.</span></li>
+          <li><b>Reach for it</b><span>Getting the gist quickly, presenting the material to someone else, or reviewing something you have read before.</span></li>
+          <li><b>In a browser</b><span>Keyboard deck: <kbd>←</kbd><kbd>→</kbd> to page, <kbd>n</kbd> toggles speaker notes, <kbd>f</kbd> fullscreen, <kbd>Home</kbd>/<kbd>End</kbd> to jump. Slides deep-link by hash, and printing gives one slide per page with the notes visible.</span></li>
+        </ul>
+        <p class="muted">
+          Every headline is a claim the source makes, not a label — "Computation beats
+          cleverness, given time", not "Background". Each slide may carry one focal
+          element: a verbatim quote, a stat, a code block, or mermaid source.
+        </p>
+        <div class="code"><pre><code>kamu paper.pdf -i "brief the team" \
+  --format slides --param slideCount=12 --open</code></pre></div>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/slides.html</span>
+          <span class="grow"></span>
+          <a href="./demo/slides.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/slides.html" title="Slide deck, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+
+  <article class="format" id="quiz">
+    <div class="format-head">
+      <h2>Quiz</h2>
+      <code>--format quiz</code>
+    </div>
+    <p class="lede">
+      Questions with answers, explanations and a quote from the source. Tests whether
+      the material actually stuck.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>questionCount</code>, <code>difficulty</code> — 1 recall, 2 understanding, 3 application.</span></li>
+          <li><b>Reach for it</b><span>Revision, exam or interview preparation, or checking your understanding after a read.</span></li>
+          <li><b>In a browser</b><span>Answer, submit, get graded, see what you missed and why.</span></li>
+          <li><b>In a terminal</b><span>The same, one question at a time, with a score at the end.</span></li>
+        </ul>
+        <p class="muted">
+          Single-choice, multi-choice and short answer. Short answers are compared after
+          normalising case, whitespace (including full-width) and trailing punctuation,
+          against a list of accepted strings — so a right answer typed slightly
+          differently still counts.
+        </p>
+        <div class="code"><pre><code>kamu https://example.com/post -i "覚えたい" --play
+<span class="cm"># the terminal player grades you as you go</span></code></pre></div>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/quiz.html</span>
+          <span class="grow"></span>
+          <a href="./demo/quiz.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/quiz.html" title="Quiz, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+
+  <article class="format" id="animation">
+    <div class="format-head">
+      <h2>Animation</h2>
+      <code>--format animation</code>
+    </div>
+    <p class="lede">
+      Kinetic typography: the ideas arrive as timed, moving text. Cinematic rather than
+      exhaustive.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>sceneCount</code>, <code>pace</code> — slow, medium or fast.</span></li>
+          <li><b>Reach for it</b><span>Making an idea land emotionally. A manifesto, a story, a pitch — or something you want other people to actually watch.</span></li>
+          <li><b>In a browser</b><span>Auto-advancing player. Click or <kbd>space</kbd> to pause, <kbd>←</kbd><kbd>→</kbd> to step, <kbd>f</kbd> fullscreen.</span></li>
+        </ul>
+        <p class="muted">
+          Scenes of one to four lines, each with a motion — fade, slide-up, zoom,
+          typewriter, stagger, flip — a duration, a hold, and a mood that sets the
+          palette. This is the one format allowed to be selective: it is cutting a
+          trailer, not writing a report.
+        </p>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/animation.html</span>
+          <span class="grow"></span>
+          <a href="./demo/animation.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/animation.html" title="Kinetic typography, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+
+  <article class="format" id="summary">
+    <div class="format-head">
+      <h2>Summary</h2>
+      <code>--format summary</code>
+    </div>
+    <p class="lede">
+      A layered digest: TL;DR, key points, a per-section outline, a glossary and the
+      questions left open.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>depth</code> — brief or thorough.</span></li>
+          <li><b>Reach for it</b><span>Deciding whether the full document is worth your time, or keeping a reference you will come back to.</span></li>
+          <li><b>In a browser</b><span>A document you can print or keep.</span></li>
+        </ul>
+        <p class="muted">
+          Map-reduce over the document: per-window digests first, then one final pass for
+          the TL;DR and key points — so the top level reflects the whole thing rather
+          than whatever happened to be in the first window.
+        </p>
+        <div class="code"><pre><code>kamu report.pdf -i "worth my afternoon?" \
+  --format summary --param depth=brief</code></pre></div>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/summary.html</span>
+          <span class="grow"></span>
+          <a href="./demo/summary.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/summary.html" title="Summary, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+
+  <article class="format" id="dialogue">
+    <div class="format-head">
+      <h2>Dialogue</h2>
+      <code>--format dialogue</code>
+    </div>
+    <p class="lede">
+      Two voices working through the material — one explaining, one asking the questions
+      you would ask.
+    </p>
+    <div class="split wide-right">
+      <div>
+        <ul class="meta-list">
+          <li><b>Params</b><span><code>level</code> — beginner, intermediate or expert.</span></li>
+          <li><b>Reach for it</b><span>Material you keep bouncing off, or when you want the why behind something rather than the what.</span></li>
+          <li><b>In a browser</b><span>The transcript is revealed one turn at a time: <kbd>space</kbd> for the next turn, <kbd>a</kbd> to reveal all.</span></li>
+        </ul>
+        <p class="muted">
+          The two speakers are established in the first window and reused across the rest,
+          so the voices stay consistent over a long document. The learner asks the awkward
+          question and pushes back on hand-waving — which is what surfaces the objections
+          a straight explanation glosses over.
+        </p>
+      </div>
+      <div class="demo">
+        <div class="demo-head">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span>demo/dialogue.html</span>
+          <span class="grow"></span>
+          <a href="./demo/dialogue.html" target="_blank" rel="noreferrer">open full ↗</a>
+        </div>
+        <iframe src="./demo/dialogue.html" title="Dialogue, rendered by kamu" loading="lazy"></iframe>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="section">
+  <div class="split">
+    <div>
+      <p class="eyebrow">Choosing</p>
+      <h2>You do not have to pick</h2>
+      <p>
+        Leave <code>--format</code> off and the planner picks from your intent, then tells
+        you why in your own language. <code>--plan-only</code> shows that decision — one
+        cheap model call — before anything is generated.
+      </p>
+      <div class="code"><pre><code>kamu spec.md -i "レビューの前に頭に入れたい" --plan-only
+<span class="cm"># format:    summary</span>
+<span class="cm"># rationale: レビュー前の確認なので、全体の主張と論点を…</span></code></pre></div>
+      <p class="muted">
+        <code>kamu formats</code> prints the same list you just read, generated from the
+        format registry — so it cannot drift from what is installed.
+      </p>
+    </div>
+    <div>
+      <p class="eyebrow">Adding one</p>
+      <h2>A format is one file</h2>
+      <p>
+        Export a <code>FormatModule</code> from
+        <code>packages/core/src/formats/&lt;id&gt;.ts</code>, add its <code>Piece</code>
+        variant, register it, and give it a renderer branch. The test suite walks every
+        registered format through every renderer, so a new one is covered the moment it
+        is registered.
+      </p>
+      <p class="muted">
+        Its <code>description</code> and <code>bestFor</code> are not documentation: they
+        are the planner's menu. Write them for the model as much as for the reader.
+      </p>
+      <p>
+        <a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/FORMATS.md" rel="noreferrer">The full walkthrough is in docs/FORMATS.md →</a>
+      </p>
+    </div>
+  </div>
+</section>

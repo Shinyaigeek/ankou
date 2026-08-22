@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://shinyaigeek.github.io/kamu/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="./styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>噛</text></svg>">
+<script>
+// Read the theme before first paint, and share the key with the pages kamu
+// renders — the demos embedded further down are those pages, so they come up
+// in whatever theme the reader picked out here.
+(function () {
+  try {
+    var saved = localStorage.getItem('kamu-theme')
+    if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved)
+  } catch (e) {}
+})()
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="bar">
+    <a class="wordmark" href="./index.html" {{home}}>
+      <span class="wordmark-latin">kamu</span>
+      <span class="wordmark-kanji" aria-hidden="true">噛</span>
+    </a>
+    <nav aria-label="Site">
+      <a href="./index.html" {{home}}>Home</a>
+      {{nav}}
+    </nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+      <span aria-hidden="true">◐</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+{{content}}
+</main>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div>
+      <p class="footer-mark">kamu <span aria-hidden="true">噛</span></p>
+      <p class="muted">Chew a document into the shape you actually want to read it in.</p>
+    </div>
+    <nav aria-label="Documentation">
+      <p class="footer-heading">Docs</p>
+      <a href="https://github.com/Shinyaigeek/kamu#readme" rel="noreferrer">README</a>
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/SDK.md" rel="noreferrer">SDK reference</a>
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/FORMATS.md" rel="noreferrer">Formats</a>
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/ARCHITECTURE.md" rel="noreferrer">Architecture</a>
+    </nav>
+    <nav aria-label="Packages">
+      <p class="footer-heading">Packages</p>
+      <a href="https://www.npmjs.com/package/@shinyaigeek/kamu" rel="noreferrer">@shinyaigeek/kamu</a>
+      <a href="https://www.npmjs.com/package/@shinyaigeek/kamu-core" rel="noreferrer">@shinyaigeek/kamu-core</a>
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/CHANGELOG.md" rel="noreferrer">Changelog</a>
+      <a href="https://github.com/Shinyaigeek/kamu/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributing</a>
+    </nav>
+  </div>
+  <p class="colophon">
+    MIT licensed. Built from the repository on every push to <code>main</code>;
+    the demos on this site are the output of <code>examples/gallery.mjs</code>, unedited.
+  </p>
+</footer>
+
+<script src="./site.js"></script>
+</body>
+</html>

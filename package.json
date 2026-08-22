@@ -10,7 +10,8 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "kamu": "node packages/cli/dist/cli.js",
-    "gallery": "node examples/gallery.mjs"
+    "gallery": "node examples/gallery.mjs",
+    "site": "node examples/gallery.mjs && node site/build.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",

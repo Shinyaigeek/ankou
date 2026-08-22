@@ -1,0 +1,222 @@
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Models</p>
+    <h1>Bring the model you already have</h1>
+    <p class="lede">
+      kamu ships no model and no vendor SDK. Every built-in provider is a
+      <code>fetch</code> call to an endpoint you control — four of them out of the box,
+      and a two-method interface if yours is not one of the four.
+    </p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Provider</th><th>What it needs</th><th>Default model</th><th>Good for</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>anthropic</code></td>
+          <td><code>ANTHROPIC_API_KEY</code></td>
+          <td><code>claude-sonnet-5</code></td>
+          <td>The default. Native tool-use for structured output.</td>
+        </tr>
+        <tr>
+          <td><code>claude-code</code></td>
+          <td>A Claude Code subscription and <code>@anthropic-ai/claude-agent-sdk</code></td>
+          <td><code>claude-sonnet-5</code></td>
+          <td>No API key at all — bills through the subscription you have.</td>
+        </tr>
+        <tr>
+          <td><code>openai</code></td>
+          <td><code>OPENAI_API_KEY</code>, or a <code>--base-url</code> for a local server</td>
+          <td><code>gpt-4.1</code></td>
+          <td>OpenAI, OpenRouter, Together, Groq, LM Studio, vLLM — anything speaking <code>/chat/completions</code>.</td>
+        </tr>
+        <tr>
+          <td><code>ollama</code></td>
+          <td>A daemon at <code>OLLAMA_HOST</code> (default <code>127.0.0.1:11434</code>)</td>
+          <td><code>qwen3:8b</code></td>
+          <td>Local, free, no network egress. The quickest route with no key.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="split">
+    <div>
+      <h3>Start with <code>kamu providers</code></h3>
+      <p class="muted">
+        It reports what each provider needs and whether it has it — probing the Ollama
+        daemon rather than assuming it, because "installed but not running" is the case
+        you cannot diagnose from the outside. This is where to land when a run stops for
+        want of a model.
+      </p>
+    </div>
+    <div class="code"><pre><code>$ kamu providers
+
+  ✓ anthropic    claude-sonnet-5
+      ANTHROPIC_API_KEY
+  · openai       gpt-4.1
+      OPENAI_API_KEY is not set
+  ✓ ollama       qwen3:8b
+      a daemon at http://127.0.0.1:11434
+  · claude-code  claude-sonnet-5
+      run `npm i @anthropic-ai/claude-agent-sdk`
+
+  Try: kamu &lt;source&gt; -i "…" --provider anthropic</code></pre></div>
+  </div>
+
+  <div class="callout">
+    <p>
+      <strong>Picked without being told:</strong> <code>KAMU_PROVIDER</code> first, then
+      whichever API key is present — Anthropic, then OpenAI — then <code>OLLAMA_HOST</code>
+      if you pointed it somewhere. A daemon on the default port stays opt-in, because
+      guessing would mean a blocking probe on every run. If nothing is found, the error
+      says so and what to do about it.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Recipes</p>
+    <h2>Wiring each one up</h2>
+  </div>
+
+  <div class="cards roomy">
+    <div class="card">
+      <p class="card-glyph">anthropic</p>
+      <h3>An API key</h3>
+      <div class="code"><pre><code>export ANTHROPIC_API_KEY=sk-ant-...
+kamu spec.md -i "覚えたい"
+
+<span class="cm"># a different model, or a gateway</span>
+kamu spec.md -i "…" -m claude-opus-4-5
+export ANTHROPIC_BASE_URL=https://my-gateway</code></pre></div>
+      <p class="muted">
+        Talks to the Messages API directly over <code>fetch</code> — deliberately not the
+        vendor SDK, so <code>kamu-core</code> stays dependency-free and drops into any
+        Node 22 project. Schemas go through native tool use.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="card-glyph">claude-code</p>
+      <h3>A subscription, no key</h3>
+      <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
+kamu spec.md -i "覚えたい" --provider claude-code</code></pre></div>
+      <p class="muted">
+        Generation runs through the Claude Agent SDK, which authenticates with your Claude
+        Code subscription. The SDK is an optional peer, imported lazily, so anyone who only
+        uses API providers never pays for it. Tools are disabled and the turn limit is low —
+        kamu wants a completion, not an agent loop.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="card-glyph">openai-compatible</p>
+      <h3>One endpoint, many vendors</h3>
+      <div class="code"><pre><code><span class="cm"># OpenAI</span>
+export OPENAI_API_KEY=sk-...
+kamu post.md -i "…" -p openai
+
+<span class="cm"># OpenRouter / Groq / Together: same shape</span>
+kamu post.md -i "…" -p openai \
+  --base-url https://openrouter.ai/api/v1 \
+  -m anthropic/claude-sonnet-4.5
+
+<span class="cm"># LM Studio or vLLM on the desk next to you</span>
+kamu post.md -i "…" -p openai \
+  --base-url http://localhost:1234/v1 -m local-model</code></pre></div>
+      <p class="muted">
+        Local servers accept any key, so kamu only insists on one when the base URL is
+        still <code>api.openai.com</code>. Structured output uses the provider's JSON
+        schema mode where it is offered.
+      </p>
+    </div>
+
+    <div class="card">
+      <p class="card-glyph">ollama</p>
+      <h3>Nothing leaves the machine</h3>
+      <div class="code"><pre><code>ollama serve
+ollama pull qwen3:8b
+kamu paper.pdf -i "…" -p ollama
+
+<span class="cm"># smaller model? give it smaller windows</span>
+kamu paper.pdf -i "…" -p ollama \
+  -m llama3.1:8b --window 8000</code></pre></div>
+      <p class="muted">
+        No key, no cost, no network egress. A daemon that answers but rejects a request is
+        told apart from one that is not there at all — the first can be asked a different
+        way, the second cannot, and collapsing the two only buys a worse error message
+        later.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="split">
+    <div>
+      <p class="eyebrow">Settings</p>
+      <h2>Flags beat environment beats file</h2>
+      <p>
+        A config file is a convenience and never a surprise. It lives at
+        <code>~/.config/kamu/config.json</code> — <code>XDG_CONFIG_HOME</code> is honoured
+        — and a broken one warns rather than stops, but does not sit there being silently
+        ignored. A key you mistyped gets the nearest real one suggested back.
+      </p>
+      <div class="code"><pre><code>{
+  "provider": "ollama",
+  "model": "qwen3:8b",
+  "renderer": "html",
+  "theme": "auto",
+  "open": true,
+  "outDir": "~/reading",
+  "windowChars": 12000
+}</code></pre></div>
+      <p class="muted">
+        <code>KAMU_PROVIDER</code> and <code>KAMU_MODEL</code> cover the environment layer;
+        <code>-p</code>, <code>-m</code> and <code>--base-url</code> cover the flags.
+      </p>
+    </div>
+
+    <div>
+      <p class="eyebrow">Everything else</p>
+      <h2>Any model with a <code>complete</code></h2>
+      <p>
+        If your model is behind a gateway, a queue, or a company proxy, implement the
+        interface and pass it in. <code>structured</code> is optional: omit it and kamu
+        prompts for JSON, validates against the schema, and retries once with the
+        validator's own errors — which is enough for most models.
+      </p>
+      <div class="code"><pre><code><span class="cm">import type { LLM } from '@shinyaigeek/kamu-core'</span>
+
+const myModel: LLM = {
+  name: 'my-gateway:some-model',
+  async complete({ system, prompt, maxTokens, temperature, signal }) {
+    return await callMyGateway({ system, prompt, maxTokens, temperature, signal })
+  },
+}
+
+await chew({ sources, intent, llm: myModel })</code></pre></div>
+      <p class="muted">
+        The built-in providers are exported too, if you would rather configure one and
+        reuse it: <code>anthropic()</code>, <code>openai()</code>, <code>ollama()</code>,
+        <code>claudeCode()</code>.
+      </p>
+      <p><a href="./agents.html">This is also how you make kamu bill through your agent's model →</a></p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>
+      <strong>Structured output, whatever the provider.</strong> Every generation in kamu
+      fills a JSON Schema. Where the provider supports tool use or a native schema mode,
+      kamu uses it; where it does not, the output is parsed, validated in-tree, and handed
+      back once with the errors it made. The format decides the schema — the provider only
+      decides how it gets filled.
+    </p>
+  </div>
+</section>

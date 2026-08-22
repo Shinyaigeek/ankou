@@ -1,0 +1,237 @@
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Agents</p>
+    <h1>Built to be called by something else</h1>
+    <p class="lede">
+      Half the point of kamu is embedding it. An agent already knows what the user asked
+      for — that sentence <em>is</em> the intent — and what comes back is typed JSON, not a
+      blob of prose it has to re-read.
+    </p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <p class="card-glyph">why it fits</p>
+      <h3>A Piece is plain JSON</h3>
+      <p class="muted">
+        Persist it, cache it, send it to a browser, hand it to the next agent. It is
+        smaller than the HTML, it is queryable, and every other renderer is one pure call
+        away.
+      </p>
+    </div>
+    <div class="card">
+      <p class="card-glyph">why it fits</p>
+      <h3>Rendering never calls a model</h3>
+      <p class="muted">
+        <code>render()</code> is a pure function: no model, no network, safe to run on a
+        server for every request. Decide the shape once, serve it a thousand times.
+      </p>
+    </div>
+    <div class="card">
+      <p class="card-glyph">why it fits</p>
+      <h3>The decision is cheap and separable</h3>
+      <p class="muted">
+        <code>chewPlan()</code> is one small call: the format it would pick and the
+        rationale, in the user's language. Show it, route on it, or price the job before
+        committing to it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="split wide-right">
+    <div>
+      <p class="eyebrow">The shape of it</p>
+      <h2>One tool, three arguments</h2>
+      <p>
+        Sources, the user's own words, and optionally a format if they were specific
+        (<em>"make me a quiz"</em>). Leave the format out and the planner decides.
+      </p>
+      <p class="muted">
+        <code>FORMAT_IDS</code> is exported, so the enum in your tool schema is generated
+        from the same registry the planner reads — a format added to kamu shows up in your
+        tool definition on the next release rather than after you remember to update a
+        list.
+      </p>
+      <p><a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/SDK.md" rel="noreferrer">Full SDK reference →</a></p>
+    </div>
+    <div class="code"><pre><code>import { chewAndRender, FORMAT_IDS } from '@shinyaigeek/kamu-core'
+
+export const readTool = {
+  name: 'reshape_document',
+  description:
+    'Reshape one or more documents (markdown, text, HTML, PDF, URL) into the ' +
+    'form the user wants to consume them in. Returns a self-contained HTML page.',
+  parameters: {
+    type: 'object',
+    properties: {
+      sources: { type: 'array', items: { type: 'string' } },
+      intent: { type: 'string', description: "What the user wants out of it, in their words." },
+      format: { type: 'string', enum: FORMAT_IDS, description: 'Optional; omit to let kamu choose.' },
+    },
+    required: ['sources', 'intent'],
+  },
+
+  async run({ sources, intent, format }, { signal }) {
+    const { piece, plan, output } = await chewAndRender({
+      sources,
+      intent,
+      ...(format ? { format } : {}),
+      renderer: 'html',
+      signal,
+    })
+    return {
+      format: piece.format,
+      rationale: plan.rationale,  <span class="cm">// show the user why this shape</span>
+      html: output.content,
+      piece,                      <span class="cm">// keep it: re-rendering is free</span>
+    }
+  },
+}</code></pre></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">Four things worth doing</p>
+    <h2>Notes from wiring it in</h2>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <h3>Reuse the host's model</h3>
+      <p class="muted">
+        Pass <code>llm</code> rather than <code>provider</code> and kamu bills, rate-limits
+        and retries through the same client as the rest of your app — one place to put your
+        keys, one place to watch your spend.
+      </p>
+      <div class="code"><pre><code>await chew({ sources, intent, llm: myAgentsModel })</code></pre></div>
+    </li>
+    <li>
+      <h3>Store the Piece, not the page</h3>
+      <p class="muted">
+        The user asks for the deck on their phone, then the quiz in the terminal, then the
+        JSON for another tool. That is three renders of one model call.
+      </p>
+      <div class="code"><pre><code>const { piece } = await chew({ sources, intent })
+await db.pieces.put(id, piece)
+
+render(piece, 'html', { theme: 'dark' })   <span class="cm">// { content, ext, mime }</span>
+render(piece, 'tui', { columns: 100 })     <span class="cm">// a plain transcript</span>
+render(piece, 'json')</code></pre></div>
+    </li>
+    <li>
+      <h3>Report progress, and mean the cancel button</h3>
+      <p class="muted">
+        A 200-page PDF is windowed and takes a while. <code>onProgress</code> reports the
+        stage — <code>ingest</code>, <code>plan</code>, <code>compose</code>,
+        <code>render</code> — and which window compose is on, so your UI can say something
+        true. An <code>AbortSignal</code> stops the run mid-flight, including the request
+        already in the air.
+      </p>
+      <div class="code"><pre><code>const controller = new AbortController()
+
+await chew({
+  sources,
+  intent,
+  signal: controller.signal,
+  onProgress: ({ stage, message }) =&gt; ui.status(`${stage}: ${message}`),
+})</code></pre></div>
+    </li>
+    <li>
+      <h3>Let the errors do the talking</h3>
+      <p class="muted">
+        Everything kamu throws deliberately is a <code>KamuError</code> with a code —
+        <code>INGEST</code>, <code>LLM</code>, <code>COMPOSE</code>, <code>CONFIG</code> —
+        and usually a <code>hint</code> that says what to do about it. An agent can branch
+        on the code and pass the hint straight to the user instead of inventing an
+        explanation.
+      </p>
+      <div class="code"><pre><code>try {
+  await chew({ sources, intent })
+} catch (error) {
+  if (error instanceof KamuError) reply(`${error.message} ${error.hint ?? ''}`)
+  else throw error
+}</code></pre></div>
+    </li>
+  </ol>
+</section>
+
+<section class="section">
+  <div class="split">
+    <div>
+      <p class="eyebrow">No SDK required</p>
+      <h2>Or just shell out</h2>
+      <p>
+        An agent that already runs commands does not need a dependency. The CLI writes the
+        piece to stdout, takes stdin as a source, and stays quiet when asked.
+      </p>
+      <div class="code"><pre><code><span class="cm"># decide first — one cheap call, nothing generated</span>
+kamu paper.pdf -i "$USER_ASK" --plan-only -q
+
+<span class="cm"># then generate, and keep the structure</span>
+kamu paper.pdf -i "$USER_ASK" --render json -o - -q &gt; piece.json
+
+<span class="cm"># render it anywhere later, no model, no network</span>
+kamu render piece.json --render html -o out.html
+
+<span class="cm"># pipe a document straight in</span>
+cat draft.md | kamu - -i "make it land" -f animation --open</code></pre></div>
+      <p class="muted">
+        <code>-q</code> silences progress so stdout is only ever the artefact. Exit codes
+        and the error hints come through on stderr.
+      </p>
+    </div>
+    <div>
+      <p class="eyebrow">On a developer's machine</p>
+      <h2>A coding agent needs no key</h2>
+      <p>
+        <code>--provider claude-code</code> runs generation through the Claude Agent SDK
+        and authenticates with a Claude Code subscription — so an agent working in someone's
+        checkout can chew a spec without asking them to provision credentials first.
+      </p>
+      <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
+kamu ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>
+      <p>
+        The repository also ships a Claude Code skill at
+        <code>.claude/skills/kamu/SKILL.md</code>: it knows to build first, to pick the
+        provider deliberately, and to check the output rather than declare victory when the
+        command exits 0.
+      </p>
+      <div class="callout">
+        <p>
+          <strong>Intent is the interface.</strong> Do not translate the user's request into
+          your own words before passing it in — the planner reads intent for tone, language
+          and purpose, and answers in the language they used.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2>Where to go next</h2>
+  </div>
+  <div class="cards">
+    <a class="card" href="./formats.html">
+      <p class="card-glyph">formats</p>
+      <h3>See every shape, live</h3>
+      <p class="muted">Six rendered examples, embedded and playable, so you know what your tool call returns.</p>
+      <p class="card-more">Open the gallery →</p>
+    </a>
+    <a class="card" href="./providers.html">
+      <p class="card-glyph">providers</p>
+      <h3>Point it at a model</h3>
+      <p class="muted">Four built-ins over plain <code>fetch</code>, or a two-method interface for your own.</p>
+      <p class="card-more">Wiring one up →</p>
+    </a>
+    <a class="card" href="https://github.com/Shinyaigeek/kamu/blob/main/docs/SDK.md" rel="noreferrer">
+      <p class="card-glyph">reference</p>
+      <h3>Every option, typed</h3>
+      <p class="muted">Sources, windows, ingest overrides, pieces, renderers, and the worked embedding example.</p>
+      <p class="card-more">docs/SDK.md →</p>
+    </a>
+  </div>
+</section>

@@ -7,6 +7,9 @@
 
 > 噛む — chew a document into the shape you actually want to read it in.
 
+**[shinyaigeek.github.io/kamu](https://shinyaigeek.github.io/kamu/)** — the tour,
+with every format rendered live on the page.
+
 You have a spec, a PDF, a long blog post. What you want out of it is not always
 "the text, top to bottom": sometimes it is *every single character, slowly*.
 Sometimes it is a deck, or a quiz you have to pass, or four seconds of kinetic
