@@ -16,9 +16,11 @@
 export {
   type ChewAndRenderOptions,
   type ChewOptions,
+  type ChewPlanResult,
   type ChewResult,
   chew,
   chewAndRender,
+  chewPlan,
 } from './chew.js'
 export { KamuError } from './errors.js'
 export {

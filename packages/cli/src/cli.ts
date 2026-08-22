@@ -3,10 +3,14 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import {
   chew,
+  chewPlan,
+  type Document,
   FORMAT_IDS,
   isFormatId,
   isRendererId,
   KamuError,
+  type Piece,
+  type Plan,
   PROVIDERS,
   type ProviderId,
   playTui,
@@ -112,47 +116,53 @@ async function main(argv: string[]): Promise<number> {
   process.once('SIGINT', () => controller.abort())
 
   // --- chew ----------------------------------------------------------------
+  const planOnly = flagBool(args, 'plan-only') ?? false
   const spinner = ui.spinner('Reading the sources')
-  let result: Awaited<ReturnType<typeof chew>>
+  const options = {
+    sources,
+    intent: intent ?? `Deliver this as ${formatFlag}.`,
+    ...(formatFlag && isFormatId(formatFlag) ? { format: formatFlag } : {}),
+    params: parseParams(flagList(args, 'param')),
+    ...(providerFlag ? { provider: providerFlag as ProviderId } : {}),
+    providerOptions: {
+      ...((flagString(args, 'model') ?? config.model)
+        ? { model: flagString(args, 'model') ?? config.model }
+        : {}),
+      ...((flagString(args, 'base-url') ?? config.baseUrl)
+        ? { baseUrl: flagString(args, 'base-url') ?? config.baseUrl }
+        : {}),
+    },
+    ...(flagString(args, 'lang') ? { lang: flagString(args, 'lang') } : {}),
+    windowChars: Number.isFinite(windowChars) ? windowChars : 24_000,
+    ingest: {
+      full: flagBool(args, 'full') ?? false,
+      timeoutMs: Number(flagString(args, 'timeout') ?? 30_000),
+    },
+    onProgress: (event: { message: string }) => spinner.update(event.message),
+    signal: controller.signal,
+  }
+
+  // `--plan-only` stops after the planner, which is the point of it: composing
+  // is where the tokens go, and the reader asked what kamu would make, not for
+  // it to be made.
+  let result: { plan: Plan; documents: Document[]; piece?: Piece }
   try {
-    result = await chew({
-      sources,
-      intent: intent ?? `Deliver this as ${formatFlag}.`,
-      ...(formatFlag && isFormatId(formatFlag) ? { format: formatFlag } : {}),
-      params: parseParams(flagList(args, 'param')),
-      ...(providerFlag ? { provider: providerFlag as ProviderId } : {}),
-      providerOptions: {
-        ...((flagString(args, 'model') ?? config.model)
-          ? { model: flagString(args, 'model') ?? config.model }
-          : {}),
-        ...((flagString(args, 'base-url') ?? config.baseUrl)
-          ? { baseUrl: flagString(args, 'base-url') ?? config.baseUrl }
-          : {}),
-      },
-      ...(flagString(args, 'lang') ? { lang: flagString(args, 'lang') } : {}),
-      windowChars: Number.isFinite(windowChars) ? windowChars : 24_000,
-      ingest: {
-        full: flagBool(args, 'full') ?? false,
-        timeoutMs: Number(flagString(args, 'timeout') ?? 30_000),
-      },
-      onProgress: (event) => spinner.update(event.message),
-      signal: controller.signal,
-    })
+    result = planOnly ? await chewPlan(options) : await chew(options)
   } catch (error) {
     spinner.stop()
-    if (error instanceof KamuError) {
-      ui.error(error.message, error.hint)
-      return 1
-    }
     if (controller.signal.aborted) {
       ui.warn('Stopped.')
       return 130
+    }
+    if (error instanceof KamuError) {
+      ui.error(error.message, error.hint)
+      return 1
     }
     throw error
   }
   spinner.stop()
 
-  const { piece, plan, documents } = result
+  const { plan, documents } = result
   ui.done(
     `${plan.format} · ${documents.length} source${documents.length === 1 ? '' : 's'} · ${documents
       .reduce((sum, document) => sum + document.charCount, 0)
@@ -160,7 +170,8 @@ async function main(argv: string[]): Promise<number> {
   )
   if (plan.rationale) ui.info(`  ${plan.rationale}`)
 
-  if (flagBool(args, 'plan-only')) {
+  const piece = result.piece
+  if (!piece) {
     process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`)
     return 0
   }

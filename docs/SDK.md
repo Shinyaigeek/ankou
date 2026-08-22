@@ -6,17 +6,24 @@ npm i @shinyaigeek/kamu-core
 
 ESM, Node 22+, no runtime dependencies.
 
-## The two entry points
+## The entry points
 
 ```ts
-import { chew, chewAndRender } from '@shinyaigeek/kamu-core'
+import { chew, chewAndRender, chewPlan } from '@shinyaigeek/kamu-core'
 
 // ingest → plan → compose. Returns the structure.
 const { piece, plan, documents } = await chew({ sources, intent })
 
 // …and render in one call.
 const { piece, plan, output } = await chewAndRender({ sources, intent, renderer: 'html' })
+
+// Just the decision: ingest → plan, and stop before anything is composed.
+const { plan, documents } = await chewPlan({ sources, intent })
 ```
+
+All three take the same options. `chewPlan` is one cheap model call — it is what
+`--plan-only` uses, and what to reach for when you want to show the reader what
+you are about to make, or route on the format before paying to generate it.
 
 ### Options
 

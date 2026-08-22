@@ -46,6 +46,15 @@ export interface ChewResult {
   documents: Document[]
 }
 
+export interface ChewPlanResult {
+  plan: Plan
+  documents: Document[]
+  /** The model the plan was made with, ready to compose with. */
+  llm: LLM
+  /** The language the result would be written in. */
+  lang: string
+}
+
 /**
  * Which language the result should be written in.
  *
@@ -73,14 +82,13 @@ function resolveLLM(options: ChewOptions): LLM {
 }
 
 /**
- * Ingest → plan → compose. The result is a `Piece`: the format-specific
- * intermediate representation, not yet rendered.
+ * Ingest → plan, and stop.
  *
- * Keeping composition and rendering apart is what lets the same chewed piece be
- * played in a terminal, opened in a browser, or handed to another program as
- * JSON without asking the model to do the work twice.
+ * Composition is where the tokens go, so deciding the shape is worth having on
+ * its own: it is what `--plan-only` needs, and it lets a caller show the reader
+ * what it is about to make before making it.
  */
-export async function chew(options: ChewOptions): Promise<ChewResult> {
+export async function chewPlan(options: ChewOptions): Promise<ChewPlanResult> {
   const llm = resolveLLM(options)
   const progress = options.onProgress
 
@@ -97,7 +105,20 @@ export async function chew(options: ChewOptions): Promise<ChewResult> {
   })
   options.signal?.throwIfAborted()
 
-  const lang = options.lang ?? outputLanguage(options.intent, documents)
+  return { plan, documents, llm, lang: options.lang ?? outputLanguage(options.intent, documents) }
+}
+
+/**
+ * Ingest → plan → compose. The result is a `Piece`: the format-specific
+ * intermediate representation, not yet rendered.
+ *
+ * Keeping composition and rendering apart is what lets the same chewed piece be
+ * played in a terminal, opened in a browser, or handed to another program as
+ * JSON without asking the model to do the work twice.
+ */
+export async function chew(options: ChewOptions): Promise<ChewResult> {
+  const { plan, documents, llm, lang } = await chewPlan(options)
+
   const context: ComposeContext = {
     documents,
     intent: options.intent,
@@ -105,11 +126,11 @@ export async function chew(options: ChewOptions): Promise<ChewResult> {
     llm,
     lang,
     windowChars: options.windowChars ?? 24_000,
-    onProgress: progress,
+    onProgress: options.onProgress,
     signal: options.signal,
   }
 
-  progress?.({ stage: 'compose', message: `Chewing into ${plan.format}` })
+  options.onProgress?.({ stage: 'compose', message: `Chewing into ${plan.format}` })
   const piece = await getFormat(plan.format).compose(context)
 
   return { piece, plan, documents }

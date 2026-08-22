@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { chew, FORMAT_IDS, render, renderTuiText, validate } from '../dist/index.js'
+import { chew, chewPlan, FORMAT_IDS, render, renderTuiText, validate } from '../dist/index.js'
 
 const SOURCE = `# 契約書の第一条
 
@@ -182,6 +182,29 @@ test('the planner is skipped when a format is given', async () => {
     llm: spy as never,
   })
   assert.equal(planned, false)
+})
+
+test('chewPlan decides the shape without composing it', async () => {
+  const llm = stubLlm()
+  const asked: string[] = []
+  const spy = {
+    ...llm,
+    structured<T>(request: any): Promise<T> {
+      asked.push(request.name)
+      return llm.structured<T>(request)
+    },
+  }
+
+  const { plan, documents } = await chewPlan({
+    sources: [{ content: SOURCE, name: 'contract.md' }],
+    intent: '要点だけ知りたい',
+    llm: spy as never,
+  })
+
+  assert.equal(plan.format, 'summary')
+  assert.equal(documents[0]?.title, '契約書の第一条')
+  // Composing is what costs; asking what kamu *would* make must not pay for it.
+  assert.deepEqual(asked, ['reading_plan'])
 })
 
 test('the planner runs and its choice is used when no format is given', async () => {

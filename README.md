@@ -110,7 +110,7 @@ navigation and cookie banners do not end up in your flipbook).
 -p, --provider <id>    anthropic | openai | ollama | claude-code
 -m, --model <id>       Model name for that provider.
     --param k=v        Format knob, repeatable: --param slideCount=12
-    --plan-only        Print what it would make, and stop.
+    --plan-only        Print what it would make and stop, without making it.
 ```
 
 Config lives at `~/.config/kamu/config.json`; flags beat environment beats file.
