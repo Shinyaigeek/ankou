@@ -14,6 +14,7 @@ import {
   type Plan,
   PROVIDERS,
   type ProviderId,
+  pieceProblems,
   playTui,
   providerStatus,
   RENDERERS,
@@ -115,10 +116,11 @@ async function main(argv: string[]): Promise<number> {
       )
       return 1
     }
-    if (!isPiece(parsed)) {
+    const problems = pieceProblems(parsed)
+    if (problems.length > 0 || !isPiece(parsed)) {
       ui.error(
-        `\`${source}\` is not a kamu piece.`,
-        `A piece is what \`--render json\` writes, and its \`format\` must be one of: ${FORMAT_IDS.join(', ')}.`,
+        `\`${source}\` is not a kamu piece kamu can render.`,
+        `Missing or wrong: ${problems.join(', ')}. A piece is what \`--render json\` writes.`,
       )
       return 1
     }

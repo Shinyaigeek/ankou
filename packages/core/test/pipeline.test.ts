@@ -8,6 +8,8 @@ import {
   isPiece,
   KamuError,
   plan as makePlan,
+  pieceProblems,
+  RENDERERS,
   render,
   renderTuiText,
   validate,
@@ -443,14 +445,41 @@ test('a piece survives a round trip through JSON and renders again', async () =>
   }
 })
 
-test('isPiece rejects what is not a piece', () => {
+test('isPiece rejects a piece the renderers could not render', () => {
   assert.equal(isPiece(null), false)
   assert.equal(isPiece('slides'), false)
   assert.equal(isPiece({}), false)
   assert.equal(isPiece({ format: 'poster' }), false, 'an unknown format is not a piece')
-  // Deliberately thin: a piece written by a version that knew a field fewer is
-  // still a piece, and the renderers cope.
-  assert.equal(isPiece({ format: 'slides' }), true)
+
+  // The discriminant alone was the whole check, and it let through pieces that
+  // reached the renderers and threw a bare TypeError at the reader.
+  assert.equal(isPiece({ format: 'slides', title: 'T', lang: 'en' }), false)
+  assert.deepEqual(pieceProblems({ format: 'slides', title: 'T', lang: 'en' }), [
+    'meta.sources',
+    'slides',
+  ])
+  assert.deepEqual(pieceProblems({ format: 'quiz' }), [
+    'title',
+    'lang',
+    'meta.sources',
+    'questions',
+  ])
+})
+
+test('every piece kamu composes passes its own check, and then renders', async () => {
+  for (const format of FORMAT_IDS) {
+    const { piece } = await chew({
+      sources: [{ content: SOURCE }],
+      intent: 'x',
+      format,
+      llm: stubLlm() as never,
+    })
+    assert.deepEqual(pieceProblems(piece), [], `${format} fails the check it should pass`)
+    // The check exists to promise this, so the promise is what gets tested.
+    for (const renderer of RENDERERS) {
+      assert.doesNotThrow(() => render(piece, renderer), `${format} → ${renderer}`)
+    }
+  }
 })
 
 test('the deck answers a hash that arrives after it has loaded', async () => {

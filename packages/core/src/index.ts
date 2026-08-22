@@ -32,6 +32,7 @@ export {
   getFormat,
   isFormatId,
   isPiece,
+  pieceProblems,
 } from './formats/index.js'
 export {
   charsetFromBom,
