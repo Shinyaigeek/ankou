@@ -23,7 +23,7 @@ import {
   type Source,
 } from '@shinyaigeek/kamu-core'
 import { flagBool, flagList, flagString, nearestFlag, parseArgs, parseParams } from './args.js'
-import { loadConfig } from './config.js'
+import { type KamuConfig, loadConfig } from './config.js'
 import { formatsText, helpText, providersText } from './help.js'
 import { openInBrowser } from './open.js'
 import { createUi } from './ui.js'
@@ -84,7 +84,10 @@ async function main(argv: string[]): Promise<number> {
     return args.positionals.length === 0 && !flagBool(args, 'help') ? 1 : 0
   }
 
-  const config = await loadConfig()
+  const { config, problems } = await loadConfig()
+  // A config file is a convenience, so a broken one warns rather than stops —
+  // but it does not sit there being silently ignored.
+  for (const problem of problems) ui.warn(problem)
 
   const rendererFlag = flagBool(args, 'play')
     ? 'tui'
@@ -247,7 +250,7 @@ async function main(argv: string[]): Promise<number> {
 
 interface DeliverContext {
   args: ReturnType<typeof parseArgs>
-  config: Awaited<ReturnType<typeof loadConfig>>
+  config: KamuConfig
   ui: ReturnType<typeof createUi>
   renderer: RendererId
   theme: 'dark' | 'light' | 'auto'
