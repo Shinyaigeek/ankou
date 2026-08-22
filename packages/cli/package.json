@@ -1,5 +1,5 @@
 {
-  "name": "kamu",
+  "name": "@shinyaigeek/kamu",
   "version": "0.1.0",
   "description": "Feed it markdown, text, HTML, PDFs or URLs, say what you want out of them, and read the result as a flipbook, deck, quiz, animation or summary.",
   "type": "module",
@@ -9,6 +9,7 @@
   "main": "./dist/cli.js",
   "files": [
     "dist",
+    "src",
     "LICENSE",
     "README.md"
   ],
