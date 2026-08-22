@@ -58,6 +58,19 @@ body { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; 
   overflow-y: auto; padding: 1.2rem 0; box-shadow: var(--shadow);
 }
 .fb-chapters.on { transform: none; }
+/*
+ * The whole text lives in the data island, not the DOM — the stage shows one
+ * character. Printing the page would give you that one character, so the text
+ * is materialised on demand and only for print.
+ */
+.fb-print { display: none; }
+@media print {
+  body { height: auto; overflow: visible; display: block; }
+  .fb-progress, .fb-stage, .fb-foot, .fb-chapters, .fb-head .counter { display: none !important; }
+  .fb-print { display: block; font-family: var(--font-serif); }
+  .fb-print h2 { font-size: 1rem; margin: 1.4em 0 .4em; page-break-after: avoid; }
+  .fb-print p { margin: 0 0 .8em; line-height: 1.7; white-space: pre-wrap; }
+}
 .fb-chapters h2 { font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--fg-faint); padding: 0 1.2rem; margin: 0 0 .6rem; }
 .fb-chapters button {
   display: block; width: 100%; text-align: left; border: 0; border-radius: 0;
@@ -263,6 +276,37 @@ ${READ_DATA}
   });
   function currentChapter() { return tape[state.at] ? tape[state.at].ci : 0; }
 
+  // Fill the printable copy only when it is about to be needed: the text is
+  // already on the page once, in the data island, and a long source should not
+  // pay for a second copy in the DOM until someone actually prints.
+  var printed = false;
+  function fillForPrint() {
+    if (printed) return;
+    printed = true;
+    var sheet = document.querySelector('.fb-print');
+    KAMU.chapters.forEach(function (chapter, index) {
+      if (chapter.title) {
+        var heading = document.createElement('h2');
+        heading.textContent = chapter.title;
+        sheet.appendChild(heading);
+      } else if (index > 0) {
+        sheet.appendChild(document.createElement('hr'));
+      }
+      chapter.text.split(/\\n{2,}/).forEach(function (paragraph) {
+        if (!paragraph.trim()) return;
+        var p = document.createElement('p');
+        p.textContent = paragraph;
+        sheet.appendChild(p);
+      });
+    });
+  }
+  // Once the reader is looking at the first character, not before: a long
+  // source should not pay for a second copy of itself during first paint.
+  // A beforeprint listener alone is not enough: a headless print never fires it.
+  window.addEventListener('beforeprint', fillForPrint);
+  if (window.requestIdleCallback) window.requestIdleCallback(fillForPrint, { timeout: 2000 });
+  else setTimeout(fillForPrint, 300);
+
   nudgeRate(1);
   paint();
 })();
@@ -295,6 +339,7 @@ export function renderFlipbookHtml(piece: FlipbookPiece, theme: 'dark' | 'light'
   <span class="speed">1.00x</span>
 </div>
 <nav class="fb-chapters"><h2>Chapters</h2></nav>
+<div class="fb-print" aria-hidden="true"></div>
 `,
   }
   return htmlDocument(

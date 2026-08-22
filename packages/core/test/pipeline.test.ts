@@ -484,3 +484,28 @@ test('every knob a format declares is one the planner is allowed to set', async 
     }
   }
 })
+
+test('the flipbook carries its whole text into the page, not just the stage', async () => {
+  const { piece } = await chew({
+    sources: [{ content: SOURCE, name: 'contract.md' }],
+    intent: '一字一句読みたい',
+    format: 'flipbook',
+    llm: stubLlm() as never,
+  })
+  const html = render(piece, 'html').content
+
+  // The stage shows one character; everything else lives in the data island and
+  // is materialised into `.fb-print` before printing. Both halves have to exist
+  // or the page prints a single letter.
+  assert.match(html, /class="fb-print"/, 'no printable copy to fill')
+  assert.match(html, /@media print[\s\S]*\.fb-print \{ display: block/, 'never shown in print')
+  assert.match(html, /addEventListener\('beforeprint'/, 'nothing fills it')
+  assert.match(
+    html,
+    /requestIdleCallback|setTimeout\(fillForPrint/,
+    'a headless print fires no event',
+  )
+  // The regex that splits paragraphs has to survive being written inside a
+  // template literal — a bare newline there is a syntax error on the page.
+  assert.ok(html.includes(String.raw`split(/\n{2,}/)`), 'the paragraph split did not survive')
+})
