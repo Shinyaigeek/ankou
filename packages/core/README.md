@@ -4,6 +4,10 @@ The engine behind [kamu](https://github.com/Shinyaigeek/kamu): chew documents
 (markdown, text, HTML, PDF, URL) into the shape you actually want to read them
 in — flipbooks, slides, quizzes, kinetic animations, summaries, dialogues.
 
+```sh
+npm i @shinyaigeek/kamu-core
+```
+
 ```ts
 import { chewAndRender } from '@shinyaigeek/kamu-core'
 
