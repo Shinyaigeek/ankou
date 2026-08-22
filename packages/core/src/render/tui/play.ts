@@ -154,6 +154,10 @@ async function playFlipbook(piece: FlipbookPiece, session: Session): Promise<voi
     const chars = graphemes(chapter.text)
     const weights = new Array<number>(chars.length).fill(0)
     for (const [term, weight] of weightOf) {
+      // `indexOf('')` answers `from` forever, so an empty term is not a term
+      // it is a hang — and a piece can arrive from anywhere, not just from
+      // kamu's own composer. The browser renderer has always guarded this.
+      if (!term) continue
       let from = 0
       for (;;) {
         const at = chapter.text.indexOf(term, from)
