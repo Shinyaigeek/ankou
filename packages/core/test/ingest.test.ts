@@ -144,3 +144,12 @@ test('entities beyond the common few are decoded, and case is respected', () => 
   // A name that is not an entity is left exactly as it was written.
   assert.ok(page('&notareal; x').text.startsWith('&notareal; x'))
 })
+
+test('a title laid out across lines is still one line', () => {
+  const document = documentFromHtml(
+    `<html><head><title>What is Free Software?\n   - GNU Project</title></head>
+     <body><article><p>${'word '.repeat(80)}</p></article></body></html>`,
+    'x',
+  )
+  assert.equal(document.title, 'What is Free Software? - GNU Project')
+})

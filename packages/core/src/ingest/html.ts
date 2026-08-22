@@ -172,10 +172,12 @@ export function documentFromHtml(
     if (key && tag.attrs.content) meta[key] = tag.attrs.content
   }
   const htmlLangAttr = findFirst(root, 'html')?.attrs.lang
+  // A <title> may be laid out across lines in the markup; it is still one line.
+  const oneLine = (value: string) => value.replace(/\s+/g, ' ').trim()
   const docTitle =
-    String(meta['og:title'] ?? '') ||
-    textOf(findFirst(root, 'title') ?? { type: 'text', value: '', parent: null }).trim() ||
-    textOf(findFirst(root, 'h1') ?? { type: 'text', value: '', parent: null }).trim() ||
+    oneLine(String(meta['og:title'] ?? '')) ||
+    oneLine(textOf(findFirst(root, 'title') ?? { type: 'text', value: '', parent: null })) ||
+    oneLine(textOf(findFirst(root, 'h1') ?? { type: 'text', value: '', parent: null })) ||
     name ||
     'Untitled'
 
