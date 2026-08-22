@@ -328,7 +328,10 @@ test('quiz questions come out gradeable however the model labelled them', async 
     }
     if (question.kind === 'single') assert.equal(question.answer.length, 1)
   }
-  assert.deepEqual(piece.questions[0]?.answer, ['a'])
+  // The answer was given as choice text; whichever slot the shuffle put it in,
+  // it has to still be that choice.
+  const first = piece.questions[0]
+  assert.equal(first?.choices?.find((choice) => choice.id === first.answer[0])?.text, '毎月末日')
 })
 
 test('dialogue turns land on a real speaker even when the model drifts', async () => {

@@ -1,6 +1,7 @@
 import { ask } from '../llm/index.js'
 import { S } from '../schema/validate.js'
 import type { Question, QuizPiece } from '../types.js'
+import { shortHash } from '../util/text.js'
 import {
   baseMeta,
   clamp,
@@ -56,6 +57,35 @@ interface QuizDraft {
 const normalise = (text: string) => text.trim().toLowerCase()
 
 /**
+ * Reorder the choices so their position stops giving the answer away.
+ *
+ * Models write the right answer first: a real run came back with `answer: ["a"]`
+ * for every single-choice question, which is a quiz you can pass without
+ * reading the source. The order is derived from the question and its choices,
+ * so a piece shuffles the same way every time — reloading a quiz gives you the
+ * quiz you were already taking — and the ids the reader clicks stay a, b, c.
+ */
+function shuffled(
+  prompt: string,
+  choices: { id: string; text: string }[],
+  answer: string[],
+): { choices: { id: string; text: string }[]; answer: string[] } {
+  if (choices.length < 2) return { choices, answer }
+
+  const renamed = new Map<string, string>()
+  const reordered = choices
+    .map((choice, index) => ({ choice, key: shortHash(`${prompt} ${choice.text}`), index }))
+    .sort((left, right) => left.key.localeCompare(right.key) || left.index - right.index)
+    .map(({ choice }, position) => {
+      const id = String.fromCharCode(97 + position)
+      renamed.set(choice.id, id)
+      return { id, text: choice.text }
+    })
+
+  return { choices: reordered, answer: answer.map((id) => renamed.get(id) ?? id) }
+}
+
+/**
  * Make a drafted question one that can actually be marked, or drop it.
  *
  * Both renderers grade by comparing the reader's pick against `answer` as choice
@@ -107,7 +137,10 @@ function gradeable(draft: QuizDraft['questions'][number]): Omit<Question, 'id'> 
 
   // A single-choice question with several answers cannot be got right: the
   // reader can only pick one. Take the model at its word about the kind.
-  return { ...base, choices, answer: kind === 'single' ? [answer[0]!] : answer }
+  return {
+    ...base,
+    ...shuffled(base.prompt, choices, kind === 'single' ? [answer[0]!] : answer),
+  }
 }
 
 export const quiz: FormatModule<'quiz'> = {
@@ -148,6 +181,7 @@ ${difficulty ? `Aim for difficulty level ${difficulty}.\n` : ''}
 ${count > 1 ? `This is part ${index + 1} of ${count} of a longer document. Ask only about this part.\n` : ''}
 Write about ${share} questions. Mix kinds; favour single-choice unless the material suits otherwise.
 Every question must be answerable from the source alone.
+In the explanation, refer to a choice by what it says, never by its letter: the choices are reordered before the reader sees them.
 
 Source:
 ---
