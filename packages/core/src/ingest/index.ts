@@ -37,6 +37,13 @@ export function kindFromMime(mime: string): SourceKind | undefined {
   return undefined
 }
 
+/**
+ * Types that are certainly not text. Anything else — `application/octet-stream`
+ * for a markdown file, or no type at all — is given the benefit of the doubt,
+ * which is how most of the web serves things kamu can read.
+ */
+const NOT_TEXT = /^(image|audio|video|font)\//i
+
 export function looksLikeUrl(value: string): boolean {
   return /^https?:\/\//i.test(value)
 }
@@ -89,18 +96,43 @@ async function ingestUrl(
   hop = 0,
 ): Promise<Document> {
   const doFetch = options.fetchImpl ?? fetch
+  const timeoutMs = options.timeoutMs ?? 30_000
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000)
+  // Our own timer, not the caller's signal, so an abort here is always ours —
+  // and saying "This operation was aborted" about a timeout we set ourselves
+  // tells the reader nothing they can act on.
+  let timedOut = false
+  let expire = () => {}
+  const timer = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+    expire()
+  }, timeoutMs)
   try {
-    const response = await doFetch(url, {
-      redirect: 'follow',
-      signal: controller.signal,
-      headers: { 'user-agent': options.userAgent ?? DEFAULT_UA, accept: '*/*' },
-    })
+    // Raced, not only signalled. `fetchImpl` is a documented extension point,
+    // and one that ignores the signal — a mock, a proxy, an older client —
+    // would otherwise hold kamu open for as long as it liked. The abort still
+    // fires alongside, to let go of the socket.
+    const response = await Promise.race([
+      doFetch(url, {
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: { 'user-agent': options.userAgent ?? DEFAULT_UA, accept: '*/*' },
+      }),
+      new Promise<never>((_, reject) => {
+        expire = () => reject(new Error('timed out'))
+      }),
+    ])
     if (!response.ok) {
       throw ingestError(`Fetching ${url} failed with HTTP ${response.status}.`)
     }
     const mime = response.headers.get('content-type') ?? ''
+    if (NOT_TEXT.test(mime.split(';')[0]!.trim())) {
+      throw ingestError(
+        `${url} is ${mime.split(';')[0]!.trim()}, which has no text in it.`,
+        'kamu reads markdown, plain text, HTML and PDF.',
+      )
+    }
     const kind = kindFromMime(mime) ?? 'html'
     const name = new URL(url).hostname
     if (kind === 'pdf') {
@@ -130,6 +162,14 @@ async function ingestUrl(
           ? documentFromText(body, url, name)
           : documentFromHtml(body, url, name, { full: options.full })
     return { ...document, origin: { kind: 'url' as const, ref: url } }
+  } catch (cause) {
+    if (timedOut) {
+      throw ingestError(
+        `${url} did not answer within ${timeoutMs}ms.`,
+        'Raise it with `--timeout`, or save the page and pass the file.',
+      )
+    }
+    throw cause
   } finally {
     clearTimeout(timer)
   }

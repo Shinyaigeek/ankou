@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ingest, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
+import { ingest, KamuError, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
 import { documentFromHtml } from '../dist/ingest/html.js'
 import { markdownToPlain, splitMarkdownSections } from '../dist/ingest/markdown.js'
 import { pdfTitle, reflowPdfText } from '../dist/ingest/pdf.js'
@@ -285,4 +285,39 @@ test('markdown emphasis is stripped, but an underscore inside a word is not', ()
   )
   // Emphasis inside a word is emphasis, by CommonMark, when it is an asterisk.
   assert.equal(markdownToPlain('a*b*c'), 'abc')
+})
+
+test('a fetch that times out says so, and says which flag raises it', async () => {
+  // It used to escape as a bare DOMException — "This operation was aborted" —
+  // which names neither the URL, the timeout, nor anything to do about it.
+  const neverAnswers = (() => new Promise<Response>(() => {})) as unknown as typeof fetch
+  await assert.rejects(
+    () => ingest('https://example.com/slow', { fetchImpl: neverAnswers, timeoutMs: 50 }),
+    (error: unknown) =>
+      error instanceof KamuError &&
+      /did not answer within 50ms/.test((error as Error).message) &&
+      /--timeout/.test((error as KamuError).hint ?? ''),
+  )
+})
+
+test('a URL that is not text says what it is', async () => {
+  const png = (async () =>
+    new Response(Buffer.from([0x89, 0x50, 0x4e, 0x47]), {
+      status: 200,
+      headers: { 'content-type': 'image/png' },
+    })) as unknown as typeof fetch
+  await assert.rejects(
+    () => ingest('https://example.com/logo.png', { fetchImpl: png }),
+    (error: unknown) => error instanceof KamuError && /image\/png/.test((error as Error).message),
+  )
+
+  // A type kamu cannot name is still given the benefit of the doubt: plenty of
+  // servers send `application/octet-stream` for a markdown file.
+  const octet = (async () =>
+    new Response('# Title\n\nSome body text, at enough length to be a document.', {
+      status: 200,
+      headers: { 'content-type': 'application/octet-stream' },
+    })) as unknown as typeof fetch
+  const document = await ingest('https://example.com/notes', { fetchImpl: octet })
+  assert.ok(document.charCount > 0)
 })
