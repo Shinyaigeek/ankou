@@ -82,3 +82,36 @@ test('wrap keeps a painted run painted across the break', () => {
   }
   assert.equal(term.stripAnsi(lines.join(' ')), term.stripAnsi(long), 'the text itself changed')
 })
+
+test('windows always advances, whatever window and overlap it is given', () => {
+  const text = 'A paragraph of text that is long enough to matter. '.repeat(40)
+
+  // `--window 200` used to hang here: composition always asks for 200 characters
+  // of overlap, so the next window started exactly where the last one did.
+  for (const [budget, overlap] of [
+    [24_000, 200],
+    [500, 200],
+    [200, 200],
+    [150, 200],
+    [1, 200],
+    [0, 0],
+  ] as [number, number][]) {
+    const out = windows(text, budget, overlap)
+    assert.ok(out.length > 0, `${budget}/${overlap} produced nothing`)
+    assert.ok(
+      out.every((window) => window.length > 0),
+      `${budget}/${overlap} produced an empty window`,
+    )
+    assert.ok(out.join('').includes(text.slice(0, 40)), `${budget}/${overlap} lost the opening`)
+  }
+})
+
+test('windows never cuts a character in half', () => {
+  const emoji = '👩‍👩‍👧‍👦 家族と🇯🇵と絵文字がたくさん並ぶ段落です。'.repeat(40)
+  const out = windows(emoji, 200, 50)
+  assert.ok(out.length > 1, 'nothing to test if it all fits')
+  const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
+  for (const window of out) {
+    assert.ok(!lone.test(window), 'a surrogate pair was split across windows')
+  }
+})

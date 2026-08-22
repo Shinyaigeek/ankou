@@ -53,25 +53,41 @@ export function graphemes(text: string): string[] {
  * paragraph boundaries so a window never starts mid-sentence.
  */
 export function windows(text: string, budget: number, overlap = 0): string[] {
-  if (charCount(text) <= budget) return [text]
+  const size = Math.max(1, Math.floor(budget))
+  // Overlap is carried context, not a second copy of the window. At the window
+  // size it makes no progress at all — the next window starts where this one
+  // did, and the loop below runs forever, which `--window 200` reached in one
+  // step because composition always asks for 200 characters of overlap. A
+  // quarter is the most that can still be called carried context.
+  const back = Math.min(Math.max(0, Math.floor(overlap)), Math.floor(size / 4))
+
+  if (charCount(text) <= size) return [text]
   const paragraphs = text.split(/\n{2,}/)
   const out: string[] = []
   let current = ''
   for (const para of paragraphs) {
-    if (current && charCount(current) + charCount(para) + 2 > budget) {
+    if (current && charCount(current) + charCount(para) + 2 > size) {
       out.push(current)
-      current = overlap > 0 ? `${current.slice(-overlap)}\n\n${para}` : para
+      current = back > 0 ? `${tail(current, back)}\n\n${para}` : para
     } else {
       current = current ? `${current}\n\n${para}` : para
     }
-    // A single paragraph larger than the budget still has to be broken up.
-    while (charCount(current) > budget) {
-      out.push(current.slice(0, budget))
-      current = current.slice(budget - overlap)
+    // A single paragraph larger than the window still has to be broken up.
+    // Sliced by code point, so a surrogate pair is never cut in half.
+    while (charCount(current) > size) {
+      const points = [...current]
+      out.push(points.slice(0, size).join(''))
+      current = points.slice(size - back).join('')
     }
   }
   if (current.trim()) out.push(current)
   return out
+}
+
+/** The last `count` characters, counted the way `charCount` counts them. */
+function tail(text: string, count: number): string {
+  const points = [...text]
+  return points.slice(Math.max(0, points.length - count)).join('')
 }
 
 /** Stable id from a string, good enough for document identity in one run. */
