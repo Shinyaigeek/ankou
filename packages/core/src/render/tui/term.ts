@@ -73,38 +73,71 @@ export function width(text: string): number {
   return total
 }
 
-/** Hard-wrap to `columns`, breaking on spaces where the language has them. */
+const ANSI_AT_CURSOR = new RegExp(`^${ESC}\\[[0-9;]*[A-Za-z]`)
+
+/**
+ * Hard-wrap to `columns`, breaking on spaces where the language has them.
+ *
+ * Escape sequences take no space on screen and must take none here either:
+ * counting the characters of `\u001b[38;5;208m` as ten columns wrapped every
+ * coloured line about fifteen short of the width the caller asked for. They are
+ * carried through instead, and a style still in force is closed at the end of
+ * the line and reopened on the next, so a long painted run stays painted.
+ */
 export function wrap(text: string, columns: number): string[] {
   const lines: string[] = []
+
   for (const paragraph of text.split('\n')) {
     if (!paragraph) {
       lines.push('')
       continue
     }
+
     let line = ''
     let lineWidth = 0
-    let lastBreak = -1
-    for (const char of paragraph) {
+    let breakAt = -1
+    let breakWidth = 0
+    let active = ''
+    const emit = (value: string) => lines.push(active ? value + ansi.reset : value)
+
+    let cursor = 0
+    while (cursor < paragraph.length) {
+      const sequence = ANSI_AT_CURSOR.exec(paragraph.slice(cursor))
+      if (sequence) {
+        const code = sequence[0]
+        line += code
+        if (code.endsWith('m')) active = code === ansi.reset ? '' : active + code
+        cursor += code.length
+        continue
+      }
+
+      const char = String.fromCodePoint(paragraph.codePointAt(cursor) ?? 0)
       const w = charWidth(char.codePointAt(0) ?? 0)
       if (lineWidth + w > columns) {
         // Prefer the last space so Latin text does not break mid-word.
-        if (lastBreak > 0 && lineWidth - lastBreak < columns * 0.4) {
-          lines.push(line.slice(0, lastBreak).trimEnd())
-          line = line.slice(lastBreak).trimStart()
-          lineWidth = width(line)
+        if (breakAt > 0 && lineWidth - breakWidth < columns * 0.4) {
+          emit(line.slice(0, breakAt).trimEnd())
+          line = active + line.slice(breakAt).trimStart()
         } else {
-          lines.push(line)
-          line = ''
-          lineWidth = 0
+          emit(line)
+          line = active
         }
-        lastBreak = -1
+        lineWidth = width(line)
+        breakAt = -1
+        breakWidth = 0
       }
+
       line += char
       lineWidth += w
-      if (char === ' ') lastBreak = line.length
+      cursor += char.length
+      if (char === ' ') {
+        breakAt = line.length
+        breakWidth = lineWidth
+      }
     }
-    lines.push(line)
+    emit(line)
   }
+
   return lines
 }
 

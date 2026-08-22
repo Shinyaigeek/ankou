@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { graphemes, windows } from '../dist/index.js'
-import { charWidth, wrap } from '../dist/render/tui/term.js'
+import * as term from '../dist/render/tui/term.js'
 import { detectLang, normaliseText, shortHash } from '../dist/util/text.js'
 
 test('graphemes keeps surrogate pairs and combining marks whole', () => {
@@ -33,18 +33,18 @@ test('windows returns the text unchanged when it fits', () => {
 })
 
 test('charWidth treats CJK as two cells and ASCII as one', () => {
-  assert.equal(charWidth('あ'.codePointAt(0)!), 2)
-  assert.equal(charWidth('a'.codePointAt(0)!), 1)
+  assert.equal(term.charWidth('あ'.codePointAt(0)!), 2)
+  assert.equal(term.charWidth('a'.codePointAt(0)!), 1)
 })
 
 test('wrap respects the display width of Japanese text', () => {
-  const lines = wrap('あ'.repeat(20), 10)
+  const lines = term.wrap('あ'.repeat(20), 10)
   assert.equal(lines.length, 4)
   for (const line of lines) assert.ok([...line].length <= 5)
 })
 
 test('wrap breaks Latin text on spaces', () => {
-  const lines = wrap('the quick brown fox jumps over the lazy dog', 12)
+  const lines = term.wrap('the quick brown fox jumps over the lazy dog', 12)
   for (const line of lines) assert.ok(line.length <= 12)
   assert.ok(lines.every((line) => !line.startsWith(' ')))
 })
@@ -52,4 +52,33 @@ test('wrap breaks Latin text on spaces', () => {
 test('shortHash is stable and differs between inputs', () => {
   assert.equal(shortHash('abc'), shortHash('abc'))
   assert.notEqual(shortHash('abc'), shortHash('abd'))
+})
+
+test('wrap measures what is on screen, not the escapes that colour it', () => {
+  const ESC = String.fromCharCode(27)
+  const sentence = 'unreliable channel and the messengers between the two generals may be captured'
+  const painted = `${ESC}[38;5;208munreliable${ESC}[0m${sentence.slice('unreliable'.length)}`
+
+  // Same text, same width on screen; it has to break in the same places.
+  assert.equal(term.width(painted), term.width(sentence))
+  assert.deepEqual(
+    term.wrap(painted, 60).map((line) => term.stripAnsi(line)),
+    term.wrap(sentence, 60),
+  )
+})
+
+test('wrap keeps a painted run painted across the break', () => {
+  const ESC = String.fromCharCode(27)
+  const long = `${ESC}[38;5;244m${'word '.repeat(30).trim()}${ESC}[0m`
+  const lines = term.wrap(long, 40)
+
+  assert.ok(lines.length > 2, 'nothing to test if it fits on one line')
+  for (const line of lines) {
+    assert.ok(term.width(line) <= 40, `${term.width(line)} columns is over the measure`)
+    // Closed at the end of the line and reopened on the next, or the colour
+    // stops after the first line and the reset lands somewhere useless.
+    assert.ok(line.startsWith(`${ESC}[38;5;244m`), 'the style was not reopened')
+    assert.ok(line.endsWith(`${ESC}[0m`), 'the style was left open')
+  }
+  assert.equal(term.stripAnsi(lines.join(' ')), term.stripAnsi(long), 'the text itself changed')
 })
