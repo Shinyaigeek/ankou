@@ -116,9 +116,24 @@ export async function mapWindows<T>(
   return results
 }
 
+/**
+ * Read a knob from the plan, or fall back.
+ *
+ * A knob that cannot be used is not a knob. `--param slideCount=twelve` reached
+ * the prompt as "Write about NaN slides", because the value was handed on
+ * unexamined and every arithmetic on it after that was NaN. Where the fallback
+ * says a number is wanted, a value that is not one is not one.
+ */
 export function param<T>(plan: Plan, key: string, fallback: T): T {
   const value = plan.params[key]
-  return value === undefined || value === null ? fallback : (value as T)
+  if (value === undefined || value === null) return fallback
+  if (typeof fallback === 'number') {
+    // Only a number or a string that spells one. `Number` reads '' as 0 and
+    // `true` as 1, and neither of those is a count anybody asked for.
+    const spelled = typeof value === 'string' && value.trim() !== '' ? Number(value.trim()) : value
+    return (typeof spelled === 'number' && Number.isFinite(spelled) ? spelled : fallback) as T
+  }
+  return value as T
 }
 
 export function clamp(value: number, min: number, max: number): number {

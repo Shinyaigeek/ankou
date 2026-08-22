@@ -628,3 +628,36 @@ test('the theme is settled in the head, before anything is painted', async () =>
     'the theme script is below the body',
   )
 })
+
+test('a knob that is not a number falls back instead of poisoning the prompt', async () => {
+  // `--param slideCount=twelve` reached the model as "Write about NaN slides".
+  let asked = ''
+  const llm = stubLlm()
+  const watch = {
+    ...llm,
+    async structured<T>(request: any): Promise<T> {
+      if (request.name === 'slide_deck') asked = request.prompt
+      return llm.structured<T>(request)
+    },
+  }
+  const slideCountIn = async (slideCount: unknown) => {
+    await chew({
+      sources: [{ content: SOURCE }],
+      intent: 'x',
+      format: 'slides',
+      params: { slideCount },
+      llm: watch as never,
+    })
+    return /(\S+) slides/.exec(asked)?.[1]
+  }
+
+  for (const nonsense of ['twelve', '', '   ', true, false, {}, []]) {
+    const answer = await slideCountIn(nonsense)
+    assert.ok(answer && Number.isFinite(Number(answer)), `${JSON.stringify(nonsense)} → ${answer}`)
+  }
+  // A number, or a string that spells one, is still honoured.
+  assert.equal(await slideCountIn(12), '12')
+  assert.equal(await slideCountIn('12'), '12')
+  // And out of range still clamps rather than falling back.
+  assert.equal(await slideCountIn(-5), '3')
+})
