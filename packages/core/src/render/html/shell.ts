@@ -9,6 +9,17 @@ export interface HtmlParts {
   data?: unknown
 }
 
+const DARK_TOKENS = `  --bg: #14130f;
+  --bg-raised: #1e1c17;
+  --bg-sunken: #0d0c0a;
+  --fg: #f2efe6;
+  --fg-muted: #a8a294;
+  --fg-faint: #6b6759;
+  --accent: #f97316;
+  --accent-soft: #3a2413;
+  --border: #302d25;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 32px rgba(0, 0, 0, .35);`
+
 /**
  * Shared design tokens.
  *
@@ -35,17 +46,16 @@ const BASE_STYLES = `
   --font-serif: ui-serif, Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
-:root[data-theme="dark"], :root:not([data-theme="light"]) {
-  --bg: #14130f;
-  --bg-raised: #1e1c17;
-  --bg-sunken: #0d0c0a;
-  --fg: #f2efe6;
-  --fg-muted: #a8a294;
-  --fg-faint: #6b6759;
-  --accent: #f97316;
-  --accent-soft: #3a2413;
-  --border: #302d25;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 32px rgba(0, 0, 0, .35);
+/* Dark applies two ways: because the reader's system asks for it, or because
+   they picked it here. Without the media query the first case swallows the
+   second — an unset preference is not a request for dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+${DARK_TOKENS}
+  }
+}
+:root[data-theme="dark"] {
+${DARK_TOKENS}
 }
 :root[data-theme="light"] {
   --bg: #fbfaf7;
