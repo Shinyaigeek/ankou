@@ -1,6 +1,5 @@
 import { llmError } from '../errors.js'
-import { validate } from '../schema/validate.js'
-import { extractJson, structuredViaPrompt } from './json.js'
+import { parseAndValidate, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
 /** Local models through the Ollama daemon. No key, no cost, no network egress. */
@@ -58,6 +57,7 @@ export function ollama(options: ProviderOptions = {}): LLM {
     },
 
     async structured<T>(request: StructuredRequest<T>): Promise<T> {
+      let priorErrors: string[] = []
       try {
         const result = await call(
           {
@@ -71,15 +71,16 @@ export function ollama(options: ProviderOptions = {}): LLM {
           },
           request.signal,
         )
-        const json = extractJson(result.message?.content ?? '')
-        if (json) {
-          const parsed = JSON.parse(json)
-          if (validate(parsed, request.schema).length === 0) return parsed as T
-        }
+        // The grammar keeps the shape honest but not the bounds, so a reply can
+        // come back well-formed and still out of range. Carry those complaints
+        // into the prompt path rather than starting the model over blind.
+        const attempt = parseAndValidate<T>(result.message?.content ?? '', request.schema)
+        if (attempt.value !== undefined) return attempt.value
+        priorErrors = attempt.errors
       } catch {
         // Older daemons reject a schema in `format`; prompt instead.
       }
-      return structuredViaPrompt(this as LLM, request)
+      return structuredViaPrompt(this as LLM, request, priorErrors)
     },
   }
 }

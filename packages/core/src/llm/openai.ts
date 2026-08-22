@@ -1,6 +1,5 @@
 import { configError, llmError } from '../errors.js'
-import { validate } from '../schema/validate.js'
-import { extractJson, structuredViaPrompt } from './json.js'
+import { parseAndValidate, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
 /**
@@ -67,6 +66,7 @@ export function openai(options: ProviderOptions = {}): LLM {
     },
 
     async structured<T>(request: StructuredRequest<T>): Promise<T> {
+      let priorErrors: string[] = []
       try {
         const result = await call(
           {
@@ -85,16 +85,21 @@ export function openai(options: ProviderOptions = {}): LLM {
           },
           request.signal,
         )
-        const content = result.choices[0]?.message.content ?? ''
-        const json = extractJson(content)
-        if (json) {
-          const parsed = JSON.parse(json)
-          if (validate(parsed, request.schema).length === 0) return parsed as T
-        }
-      } catch {
-        // Endpoints that do not implement json_schema fall through to prompting.
+        // `strict: false` buys compatibility with the many endpoints that only
+        // approximate json_schema, at the cost of replies that fit the shape but
+        // not the bounds. Hand those complaints to the prompt path to repair.
+        const attempt = parseAndValidate<T>(
+          result.choices[0]?.message.content ?? '',
+          request.schema,
+        )
+        if (attempt.value !== undefined) return attempt.value
+        priorErrors = attempt.errors
+      } catch (cause) {
+        // Endpoints that do not implement json_schema fall through to prompting;
+        // an aborted run is not something to retry.
+        if (request.signal?.aborted) throw cause
       }
-      return structuredViaPrompt(this as LLM, request)
+      return structuredViaPrompt(this as LLM, request, priorErrors)
     },
   }
 }

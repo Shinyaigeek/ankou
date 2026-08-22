@@ -86,45 +86,72 @@ export function extractJson(raw: string): string | null {
   return closeTruncated(text, start)
 }
 
-function schemaPrompt(prompt: string, schema: JsonSchema): string {
-  return `${prompt}
+export interface StructuredAttempt<T> {
+  /** Present only when the reply parsed *and* matched the schema. */
+  value?: T
+  /** What went wrong, phrased for the model that has to fix it. */
+  errors: string[]
+}
+
+/** Check an already-decoded value — a tool-use input, say — against the schema. */
+export function checkValue<T>(value: unknown, schema: JsonSchema): StructuredAttempt<T> {
+  const errors = validate(value, schema)
+  return errors.length > 0 ? { errors } : { value: value as T, errors: [] }
+}
+
+/** Decode a raw model reply and check it against the schema, in one step. */
+export function parseAndValidate<T>(raw: string, schema: JsonSchema): StructuredAttempt<T> {
+  const json = extractJson(raw)
+  if (!json) return { errors: ['The reply contained no JSON value.'] }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(json)
+  } catch (cause) {
+    return { errors: [`The JSON did not parse: ${(cause as Error).message}`] }
+  }
+  return checkValue<T>(parsed, schema)
+}
+
+function schemaPrompt(prompt: string, schema: JsonSchema, priorErrors: string[]): string {
+  const base = `${prompt}
 
 Reply with a single JSON value and nothing else. No prose, no code fence, no trailing commentary.
 It must validate against this JSON Schema:
 
 ${JSON.stringify(schema, null, 2)}`
+  if (priorErrors.length === 0) return base
+  return `${base}
+
+A previous attempt failed with:
+${priorErrors.map((error) => `- ${error}`).join('\n')}
+
+Fix those problems and return the corrected JSON.`
 }
 
 /**
  * Structured output for providers without native tool use: ask for JSON, parse
  * it, validate it, and give the model its own errors back once before failing.
+ *
+ * `priorErrors` lets a provider that *does* have a native path hand over what it
+ * already learned, so a near-miss is repaired instead of started from scratch.
  */
-export async function structuredViaPrompt<T>(llm: LLM, request: StructuredRequest<T>): Promise<T> {
-  const attempt = async (prompt: string): Promise<{ value?: T; errors: string[] }> => {
-    const raw = await llm.complete({ ...request, prompt })
-    const json = extractJson(raw)
-    if (!json) return { errors: ['The reply contained no JSON value.'] }
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(json)
-    } catch (cause) {
-      return { errors: [`The JSON did not parse: ${(cause as Error).message}`] }
-    }
-    const errors = validate(parsed, request.schema)
-    return errors.length > 0 ? { errors } : { value: parsed as T, errors: [] }
+export async function structuredViaPrompt<T>(
+  llm: LLM,
+  request: StructuredRequest<T>,
+  priorErrors: string[] = [],
+): Promise<T> {
+  const attempt = async (errors: string[]): Promise<StructuredAttempt<T>> => {
+    const raw = await llm.complete({
+      ...request,
+      prompt: schemaPrompt(request.prompt, request.schema, errors),
+    })
+    return parseAndValidate<T>(raw, request.schema)
   }
 
-  const first = await attempt(schemaPrompt(request.prompt, request.schema))
+  const first = await attempt(priorErrors)
   if (first.value !== undefined) return first.value
 
-  const retry = await attempt(
-    `${schemaPrompt(request.prompt, request.schema)}
-
-A previous attempt failed with:
-${first.errors.map((error) => `- ${error}`).join('\n')}
-
-Fix those problems and return the corrected JSON.`,
-  )
+  const retry = await attempt(first.errors)
   if (retry.value !== undefined) return retry.value
 
   throw llmError(

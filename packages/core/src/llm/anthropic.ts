@@ -1,6 +1,5 @@
 import { configError, llmError } from '../errors.js'
-import { validate } from '../schema/validate.js'
-import { structuredViaPrompt } from './json.js'
+import { checkValue, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
 const DEFAULT_MODEL = 'claude-sonnet-5'
@@ -98,17 +97,14 @@ export function anthropic(options: ProviderOptions = {}): LLM {
         request.signal,
       )
       const toolUse = result.content.find((block) => block.type === 'tool_use')
-      if (!toolUse?.input) {
-        return structuredViaPrompt(this as LLM, request)
-      }
-      const errors = validate(toolUse.input, request.schema)
-      if (errors.length > 0) {
-        throw llmError(
-          `Anthropic returned a \`${request.name}\` object that does not match the schema.`,
-          errors.slice(0, 5).join('; '),
-        )
-      }
-      return toolUse.input as T
+      if (!toolUse?.input) return structuredViaPrompt(this as LLM, request)
+
+      // Tool use gets the shape right; bounds like `minimum` are guidance the
+      // model can still miss. A near-miss is worth one repair round rather than
+      // an abandoned run.
+      const attempt = checkValue<T>(toolUse.input, request.schema)
+      if (attempt.value !== undefined) return attempt.value
+      return structuredViaPrompt(this as LLM, request, attempt.errors)
     },
   }
 }
