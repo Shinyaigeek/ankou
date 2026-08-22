@@ -1,8 +1,25 @@
 import { configError, llmError } from '../errors.js'
 import { structuredViaPrompt } from './json.js'
-import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
+import type {
+  ClaudeAgentSdk,
+  CompleteRequest,
+  LLM,
+  ProviderOptions,
+  StructuredRequest,
+} from './types.js'
 
 export const DEFAULT_MODEL = 'claude-sonnet-5'
+
+interface AssistantMessage {
+  type: 'assistant'
+  message?: { content?: { type: string; text?: string }[] }
+}
+
+interface ResultMessage {
+  type: 'result'
+  subtype: string
+  result?: unknown
+}
 
 /**
  * Run generation through the Claude Agent SDK, which authenticates with a
@@ -15,18 +32,20 @@ export const DEFAULT_MODEL = 'claude-sonnet-5'
 export function claudeCode(options: ProviderOptions = {}): LLM {
   const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
 
-  const run = async (request: CompleteRequest): Promise<string> => {
-    let sdk: {
-      query: (params: { prompt: string; options?: Record<string, unknown> }) => AsyncIterable<any>
-    }
+  const load = async (): Promise<ClaudeAgentSdk> => {
+    if (options.sdk) return options.sdk
     try {
-      sdk = (await import('@anthropic-ai/claude-agent-sdk')) as never
+      return (await import('@anthropic-ai/claude-agent-sdk')) as unknown as ClaudeAgentSdk
     } catch {
       throw configError(
         'The claude-code provider requires the optional `@anthropic-ai/claude-agent-sdk` package.',
         'Install it with `npm i @anthropic-ai/claude-agent-sdk`, or use `--provider anthropic` with an API key.',
       )
     }
+  }
+
+  const run = async (request: CompleteRequest): Promise<string> => {
+    const sdk = await load()
 
     const conversation = sdk.query({
       prompt: request.prompt,
@@ -41,22 +60,24 @@ export function claudeCode(options: ProviderOptions = {}): LLM {
     })
 
     let text = ''
-    for await (const message of conversation) {
+    for await (const raw of conversation) {
+      const message = raw as { type?: string }
       if (message.type === 'assistant') {
-        for (const block of message.message?.content ?? []) {
-          if (block.type === 'text') text += block.text
+        for (const block of (message as AssistantMessage).message?.content ?? []) {
+          if (block.type === 'text') text += block.text ?? ''
         }
       }
       if (message.type === 'result') {
+        const result = message as ResultMessage
         // A turn-limit result still carries the assistant text we asked for, so
         // only a run that produced nothing at all is an error.
-        if (message.subtype !== 'success' && !text) {
+        if (result.subtype !== 'success' && !text) {
           throw llmError(
-            `Claude Code returned ${message.subtype}.`,
+            `Claude Code returned ${result.subtype}.`,
             'Check `claude` is installed and logged in with an active subscription.',
           )
         }
-        return typeof message.result === 'string' && message.result ? message.result : text
+        return typeof result.result === 'string' && result.result ? result.result : text
       }
     }
     if (!text) throw llmError('Claude Code produced no output.')

@@ -53,6 +53,17 @@ export interface ProviderOptions {
   fetchImpl?: typeof fetch
   /** Extra headers merged into every request. */
   headers?: Record<string, string>
+  /**
+   * Claude Agent SDK module for the `claude-code` provider — what `fetchImpl` is
+   * for the HTTP providers. Left unset, the SDK is imported lazily from the
+   * optional peer dependency.
+   */
+  sdk?: ClaudeAgentSdk
+}
+
+/** The sliver of the Claude Agent SDK the `claude-code` provider uses. */
+export interface ClaudeAgentSdk {
+  query(params: { prompt: string; options?: Record<string, unknown> }): AsyncIterable<unknown>
 }
 
 export type ProviderId = 'anthropic' | 'openai' | 'ollama' | 'claude-code'
