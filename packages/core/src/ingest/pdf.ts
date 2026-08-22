@@ -1,5 +1,5 @@
 import { ingestError } from '../errors.js'
-import type { Document } from '../types.js'
+import type { Document, Section } from '../types.js'
 import { charCount, detectLang, normaliseText, shortHash } from '../util/text.js'
 import { inferSections } from './text.js'
 
@@ -88,6 +88,28 @@ export function reflowPdfText(page: string): string {
   return out.join('\n\n')
 }
 
+/**
+ * What to call a PDF: what it says it is, then what it calls itself, then what
+ * it was saved as.
+ *
+ * A downloaded paper is named `2301.12345v2.pdf` and often carries no title in
+ * its metadata, which left the filename standing in for one — in the deck
+ * header, in the browser tab, and in the name of the file kamu writes back out.
+ * The document says what it is called on its first page.
+ */
+export function pdfTitle(
+  info: Record<string, unknown>,
+  sections: Section[],
+  name?: string,
+): string {
+  return (
+    String(info.Title ?? '').trim() ||
+    sections.find((section) => section.title)?.title ||
+    name ||
+    'Untitled PDF'
+  )
+}
+
 export async function documentFromPdf(
   bytes: Uint8Array,
   ref: string,
@@ -102,13 +124,14 @@ export async function documentFromPdf(
       'The PDF is probably a scan. Run OCR on it first, then feed the result to kamu.',
     )
   }
-  const title = String(info.Title ?? '').trim() || name || 'Untitled PDF'
+  const sections = inferSections(text)
+  const title = pdfTitle(info, sections, name)
   return {
     id: shortHash(ref + text.slice(0, 512)),
     title,
     origin: { kind: 'pdf', ref },
     text,
-    sections: inferSections(text),
+    sections,
     meta: { ...info, pageCount: pages.length },
     charCount: charCount(text),
     lang: detectLang(text),

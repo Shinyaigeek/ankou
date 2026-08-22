@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { ingest, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
 import { documentFromHtml } from '../dist/ingest/html.js'
 import { splitMarkdownSections } from '../dist/ingest/markdown.js'
-import { reflowPdfText } from '../dist/ingest/pdf.js'
+import { pdfTitle, reflowPdfText } from '../dist/ingest/pdf.js'
 
 test('kindFromContent sniffs html, markdown and plain text', () => {
   assert.equal(kindFromContent('<!doctype html><html><body>hi</body></html>'), 'html')
@@ -246,4 +246,15 @@ test('a roman numeral is a folio; a word made of the same letters is not', () =>
   for (const word of ['civil', 'ill', 'lil', 'vill']) {
     assert.ok(page(word).includes(word), `${word} was deleted as a folio`)
   }
+})
+
+test('a PDF with no title in its metadata takes the one on its first page', () => {
+  const heading = [{ level: 1, title: 'Attention Is All You Need', text: 'body' }]
+  assert.equal(pdfTitle({ Title: 'From the metadata' }, heading, 'x.pdf'), 'From the metadata')
+  // Otherwise the filename is `2301.12345v2.pdf`, which tells the reader nothing
+  // and ends up in the deck header and the name of the file kamu writes.
+  assert.equal(pdfTitle({}, heading, '2301.12345v2.pdf'), 'Attention Is All You Need')
+  assert.equal(pdfTitle({ Title: '   ' }, heading, 'x.pdf'), 'Attention Is All You Need')
+  assert.equal(pdfTitle({}, [{ level: 1, title: '', text: 'body' }], 'x.pdf'), 'x.pdf')
+  assert.equal(pdfTitle({}, [], undefined), 'Untitled PDF')
 })
