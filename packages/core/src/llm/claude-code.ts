@@ -2,6 +2,8 @@ import { configError, llmError } from '../errors.js'
 import { structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
+export const DEFAULT_MODEL = 'claude-sonnet-5'
+
 /**
  * Run generation through the Claude Agent SDK, which authenticates with a
  * Claude Code subscription instead of an API key.
@@ -11,7 +13,7 @@ import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from '.
  * limit is low: we want a completion, not an agent loop.
  */
 export function claudeCode(options: ProviderOptions = {}): LLM {
-  const model = options.model ?? process.env.KAMU_MODEL ?? 'claude-sonnet-5'
+  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
 
   const run = async (request: CompleteRequest): Promise<string> => {
     let sdk: {

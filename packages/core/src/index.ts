@@ -48,6 +48,8 @@ export {
   ollama,
   openai,
   PROVIDERS,
+  type ProviderStatus,
+  providerStatus,
 } from './llm/index.js'
 export type {
   CompleteRequest,

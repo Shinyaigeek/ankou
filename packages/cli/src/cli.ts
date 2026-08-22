@@ -14,13 +14,14 @@ import {
   PROVIDERS,
   type ProviderId,
   playTui,
+  providerStatus,
   RENDERERS,
   render,
   type Source,
 } from '@shinyaigeek/kamu-core'
 import { flagBool, flagList, flagString, parseArgs, parseParams } from './args.js'
 import { loadConfig } from './config.js'
-import { formatsText, helpText } from './help.js'
+import { formatsText, helpText, providersText } from './help.js'
 import { openInBrowser } from './open.js'
 import { createUi } from './ui.js'
 
@@ -57,7 +58,7 @@ async function main(argv: string[]): Promise<number> {
     return 0
   }
   if (command === 'providers') {
-    process.stdout.write(`${PROVIDERS.join('\n')}\n`)
+    process.stdout.write(providersText(await providerStatus(), ui.colour))
     return 0
   }
   if (flagBool(args, 'help') || args.positionals.length === 0) {

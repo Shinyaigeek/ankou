@@ -49,6 +49,9 @@ export ANTHROPIC_API_KEY=sk-...          # the default provider
 # or --provider ollama       → local, free, no network egress
 ```
 
+`kamu providers` says which of those are ready on this machine and what the rest
+are still missing. Start there if a run stops for want of a model.
+
 ## What it does
 
 ```

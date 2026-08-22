@@ -1,4 +1,10 @@
-import { FORMAT_IDS, FORMATS, PROVIDERS, RENDERERS } from '@shinyaigeek/kamu-core'
+import {
+  FORMAT_IDS,
+  FORMATS,
+  PROVIDERS,
+  type ProviderStatus,
+  RENDERERS,
+} from '@shinyaigeek/kamu-core'
 import { style } from './ui.js'
 
 const { ansi, palette } = style
@@ -53,6 +59,8 @@ ${c('CREDENTIALS', ansi.bold)}
   --provider claude-code uses a Claude Code subscription, no key needed
   --provider ollama runs locally against OLLAMA_HOST
 
+  \`kamu providers\` shows which of these are ready right now.
+
   Config file: ~/.config/kamu/config.json — { "provider": "...", "model": "..." }
 `
 }
@@ -78,4 +86,28 @@ ${
 }
 `
   }).join('\n')
+}
+
+/**
+ * What each provider needs and whether it has it. Printed by `kamu providers`,
+ * which is where someone lands when the run failed for want of a model.
+ */
+export function providersText(statuses: ProviderStatus[], colour: boolean): string {
+  const c = (text: string, ...codes: string[]) =>
+    colour ? `${codes.join('')}${text}${ansi.reset}` : text
+
+  const width = Math.max(...statuses.map((status) => status.id.length))
+  const lines = statuses.map((status) => {
+    const mark = status.ready ? c('✓', palette.ok) : c('·', palette.faint)
+    const id = c(status.id.padEnd(width), status.ready ? palette.accent : palette.muted)
+    const detail = status.ready ? status.requires : (status.blocker ?? status.requires)
+    return `  ${mark} ${id}  ${c(status.defaultModel, palette.muted)}\n      ${c(detail, palette.faint)}`
+  })
+
+  const ready = statuses.filter((status) => status.ready)
+  const footer = ready.length
+    ? `Try: ${c(`kamu <source> -i "…" --provider ${ready[0]!.id}`, palette.accent)}`
+    : 'Nothing is configured yet. The quickest route with no API key is `ollama serve`.'
+
+  return `${lines.join('\n')}\n\n  ${footer}\n`
 }

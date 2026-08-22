@@ -2,8 +2,8 @@ import { configError, llmError } from '../errors.js'
 import { checkValue, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
-const DEFAULT_MODEL = 'claude-sonnet-5'
-const DEFAULT_BASE = 'https://api.anthropic.com'
+export const DEFAULT_MODEL = 'claude-sonnet-5'
+export const DEFAULT_BASE = 'https://api.anthropic.com'
 const API_VERSION = '2023-06-01'
 
 interface AnthropicContent {

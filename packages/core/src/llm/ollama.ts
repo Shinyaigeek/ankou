@@ -24,13 +24,17 @@ const asLlmError = (cause: unknown): unknown =>
     ? llmError(cause.message, cause.detail.slice(0, 400) || undefined)
     : cause
 
+export const DEFAULT_MODEL = 'qwen3:8b'
+export const DEFAULT_HOST = 'http://127.0.0.1:11434'
+
+/** Where the daemon is, after the environment has had its say. */
+export const ollamaHost = (baseUrl?: string): string =>
+  (baseUrl ?? process.env.OLLAMA_HOST ?? DEFAULT_HOST).replace(/\/$/, '')
+
 /** Local models through the Ollama daemon. No key, no cost, no network egress. */
 export function ollama(options: ProviderOptions = {}): LLM {
-  const model = options.model ?? process.env.KAMU_MODEL ?? 'qwen3:8b'
-  const baseUrl = (options.baseUrl ?? process.env.OLLAMA_HOST ?? 'http://127.0.0.1:11434').replace(
-    /\/$/,
-    '',
-  )
+  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const baseUrl = ollamaHost(options.baseUrl)
   const doFetch = options.fetchImpl ?? fetch
 
   const call = async (body: Record<string, unknown>, signal?: AbortSignal) => {

@@ -2,18 +2,20 @@ import { configError, llmError } from '../errors.js'
 import { parseAndValidate, structuredViaPrompt } from './json.js'
 import type { CompleteRequest, LLM, ProviderOptions, StructuredRequest } from './types.js'
 
+export const DEFAULT_MODEL = 'gpt-4.1'
+export const DEFAULT_BASE = 'https://api.openai.com/v1'
+
 /**
  * Any OpenAI-compatible `/chat/completions` endpoint: OpenAI itself, OpenRouter,
  * Together, LM Studio, vLLM, Groq. Point `baseUrl` at the server and go.
  */
 export function openai(options: ProviderOptions = {}): LLM {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY
-  const model = options.model ?? process.env.KAMU_MODEL ?? 'gpt-4.1'
-  const baseUrl = (
-    options.baseUrl ??
-    process.env.OPENAI_BASE_URL ??
-    'https://api.openai.com/v1'
-  ).replace(/\/$/, '')
+  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const baseUrl = (options.baseUrl ?? process.env.OPENAI_BASE_URL ?? DEFAULT_BASE).replace(
+    /\/$/,
+    '',
+  )
   const doFetch = options.fetchImpl ?? fetch
 
   // Local servers accept any key, so only complain for the hosted default.

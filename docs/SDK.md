@@ -45,7 +45,17 @@ interface ChewOptions {
 ```
 
 With no `llm` and no `provider`, kamu reads `KAMU_PROVIDER`, then falls back to
-whichever API key is present, and throws an actionable error if there is none.
+whichever API key is present, then to `OLLAMA_HOST`, and throws an actionable
+error if there is none. `providerStatus()` reports what each provider needs and
+whether it has it — it is what `kamu providers` prints:
+
+```ts
+import { providerStatus } from '@shinyaigeek/kamu-core'
+
+for (const status of await providerStatus()) {
+  status.id, status.defaultModel, status.ready, status.blocker
+}
+```
 
 ## Sources
 

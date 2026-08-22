@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { anthropic, KamuError, ollama, S } from '../dist/index.js'
+import { anthropic, detectProvider, KamuError, ollama, S } from '../dist/index.js'
 import { extractJson, structuredViaPrompt } from '../dist/llm/json.js'
 
 const PACING = S.object(
@@ -130,4 +130,23 @@ test('anthropic repairs an out-of-range tool result instead of abandoning the ru
   assert.ok(calls[0]?.tools, 'the first call should use tool use')
   const retry = (calls[1]!.messages as { content: string }[])[0]!.content
   assert.ok(retry.includes('must be <= 400'))
+})
+
+test('detectProvider takes OLLAMA_HOST as a choice, not a coincidence', () => {
+  const saved = { ...process.env }
+  try {
+    for (const key of ['KAMU_PROVIDER', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'OLLAMA_HOST']) {
+      delete process.env[key]
+    }
+    assert.equal(detectProvider(), undefined)
+
+    process.env.OLLAMA_HOST = 'http://127.0.0.1:11434'
+    assert.equal(detectProvider(), 'ollama')
+
+    // A configured key still beats the local daemon.
+    process.env.ANTHROPIC_API_KEY = 'sk-test'
+    assert.equal(detectProvider(), 'anthropic')
+  } finally {
+    process.env = saved
+  }
 })
