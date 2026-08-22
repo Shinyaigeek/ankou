@@ -604,3 +604,27 @@ test('the planner is shown an outline, not an author list', async () => {
   assert.ok(outline.includes('- 1 Introduction'))
   assert.ok(!outline.includes('@example.com'), 'the author list is still the outline')
 })
+
+test('the theme is settled in the head, before anything is painted', async () => {
+  const { piece } = await chew({
+    sources: [{ content: SOURCE }],
+    intent: 'x',
+    format: 'summary',
+    llm: stubLlm() as never,
+  })
+  const html = render(piece, 'html').content
+  const head = html.slice(0, html.indexOf('</head>'))
+
+  // At the end of <body> this arrived after the browser had already painted a
+  // screenful in the system theme: measured on a 190KB page, a dark frame at
+  // 1951 nodes and the reader's stored light theme at 2489.
+  assert.ok(head.includes('kamu-theme'), 'the stored theme is read too late to matter')
+  assert.ok(
+    head.includes('kamuToggleTheme'),
+    'the toggle is defined after the button that calls it',
+  )
+  assert.ok(
+    html.indexOf('kamu-theme') < html.indexOf('<body>'),
+    'the theme script is below the body',
+  )
+})

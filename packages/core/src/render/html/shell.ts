@@ -113,6 +113,14 @@ pre {
 }
 `
 
+/*
+ * Runs in <head>, before anything is painted.
+ *
+ * At the end of <body> it was too late: on a page of any size the browser had
+ * already painted a screenful in the system theme, and the reader's stored
+ * choice arrived after. Measured on a 190KB summary — a dark frame at 1951
+ * nodes, the stored light theme at 2489.
+ */
 const THEME_SCRIPT = `
 (function () {
   var root = document.documentElement;
@@ -160,6 +168,7 @@ export function htmlDocument(options: ShellOptions, parts: HtmlParts): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="generator" content="kamu">
+<script>${THEME_SCRIPT}</script>
 <title>${escapeHtml(options.title)}</title>
 <style>${BASE_STYLES}${parts.styles}</style>
 </head>
@@ -177,7 +186,7 @@ ${
       }chewed by <b>kamu</b></p>`
 }
 ${dataIsland}
-<script>${THEME_SCRIPT}${parts.script ?? ''}</script>
+${parts.script ? `<script>${parts.script}</script>` : ''}
 </body>
 </html>
 `
