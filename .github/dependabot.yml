@@ -1,0 +1,28 @@
+version: 2
+
+# Actions are pinned to a commit SHA, which is only safe if something moves the
+# pin when upstream ships a fix. That something is this file.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+
+  # kamu-core has no runtime dependencies and the CLI has one workspace
+  # dependency, so in practice this is the toolchain: biome, typescript, types.
+  # Note `minimumReleaseAge` in pnpm-workspace.yaml — a bump to a release younger
+  # than a week will not resolve, and the PR is meant to sit until it does.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      toolchain:
+        patterns: ['*']
+    commit-message:
+      prefix: deps

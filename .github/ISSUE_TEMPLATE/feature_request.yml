@@ -1,0 +1,45 @@
+name: Feature request
+description: A format, a flag, a provider, an SDK surface
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you want out of a document that kamu cannot give you
+      description: |
+        kamu is built around intent — "I want to remember this", "I keep
+        bouncing off this". Start there rather than at the implementation, and
+        the shape of the feature usually falls out of it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What you do today
+      description: The format or flag you reach for now, and where it falls short.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it lands
+      options:
+        - a new format
+        - an existing format
+        - ingestion (a source kind, encoding, extraction)
+        - a renderer (html, tui, json)
+        - a provider
+        - the CLI
+        - the SDK
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: |
+        `kamu-core` has no runtime dependencies, and that is a feature. Anything
+        that needs one has to argue for itself.
+      options:
+        - label: As far as I know this needs no new runtime dependency.

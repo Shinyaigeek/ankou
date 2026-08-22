@@ -1,0 +1,66 @@
+name: Bug report
+description: Something kamu did that it should not have done
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The source document and the intent you passed are worth ten paragraphs of
+        description. If you can, paste the command exactly as you ran it.
+
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The full command, including `--intent`.
+      render: shell
+      placeholder: kamu spec.md --intent "一字一句漏らさず頭に入れたい" --format flipbook
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+      description: |
+        For a crash, the error and the stack. For output that was wrong rather
+        than broken, say what was wrong with it — and attach `--render json`,
+        which is the most useful thing you can send.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: The source
+      description: |
+        A link to the document, or a small excerpt that reproduces it. If it is
+        private, the smallest thing you can share that still misbehaves.
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - anthropic
+        - openai (or an OpenAI-compatible endpoint)
+        - ollama
+        - claude-code
+        - not reached — it broke before the model
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: claude-sonnet-4-5, gpt-4.1, qwen3:8b …
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: '`kamu --version`, `node --version`, and your OS.'
+      render: shell
+    validations:
+      required: true
