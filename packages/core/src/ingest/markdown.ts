@@ -26,17 +26,26 @@ export function splitMarkdownSections(text: string): Section[] {
 
 /** Strip markdown syntax down to the words a reader would actually speak. */
 export function markdownToPlain(md: string): string {
-  return md
-    .replace(/^---\n[\s\S]*?\n---\n/, '') // front matter
-    .replace(/```[\s\S]*?```/g, (block) => block.replace(/^```.*$/gm, '').trim())
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/^\s{0,3}>\s?/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '・')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    .replace(/`([^`]*)`/g, '$1')
-    .replace(/^\s*#{1,6}\s+/gm, '')
+  return (
+    md
+      .replace(/^---\n[\s\S]*?\n---\n/, '') // front matter
+      .replace(/```[\s\S]*?```/g, (block) => block.replace(/^```.*$/gm, '').trim())
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/^\s{0,3}>\s?/gm, '')
+      .replace(/^\s*[-*+]\s+/gm, '・')
+      // Emphasis, by the rule the reader's eye uses: a delimiter has to hug the
+      // text it marks. `2 * 3 * 4` is arithmetic, and an underscore inside a word
+      // is part of the word — `some_var_name` was coming out as `somevarname`,
+      // and `MAX_RETRY_COUNT` as `MAXRETRYCOUNT`, in a tool that promises to play
+      // the source back one character at a time.
+      .replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, '$1')
+      .replace(/\*(?=\S)([^*\n]*?\S|\S)\*/g, '$1')
+      .replace(/(?<![A-Za-z0-9_])__(?=\S)([\s\S]*?\S)__(?![A-Za-z0-9_])/g, '$1')
+      .replace(/(?<![A-Za-z0-9_])_(?=\S)([^_\n]*?\S|\S)_(?![A-Za-z0-9_])/g, '$1')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/^\s*#{1,6}\s+/gm, '')
+  )
 }
 
 export function parseFrontMatter(text: string): { meta: Record<string, unknown>; body: string } {

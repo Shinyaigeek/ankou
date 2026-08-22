@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { ingest, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
 import { documentFromHtml } from '../dist/ingest/html.js'
-import { splitMarkdownSections } from '../dist/ingest/markdown.js'
+import { markdownToPlain, splitMarkdownSections } from '../dist/ingest/markdown.js'
 import { pdfTitle, reflowPdfText } from '../dist/ingest/pdf.js'
 
 test('kindFromContent sniffs html, markdown and plain text', () => {
@@ -257,4 +257,32 @@ test('a PDF with no title in its metadata takes the one on its first page', () =
   assert.equal(pdfTitle({ Title: '   ' }, heading, 'x.pdf'), 'Attention Is All You Need')
   assert.equal(pdfTitle({}, [{ level: 1, title: '', text: 'body' }], 'x.pdf'), 'x.pdf')
   assert.equal(pdfTitle({}, [], undefined), 'Untitled PDF')
+})
+
+test('markdown emphasis is stripped, but an underscore inside a word is not', () => {
+  // The flipbook plays this text back one character at a time, so a delimiter
+  // rule that eats `some_var_name` into `somevarname` is a fidelity bug, not a
+  // formatting one. `2 * 3 * 4` is arithmetic for the same reason.
+  const unchanged = [
+    'The flag is some_var_name and also MAX_RETRY_COUNT here.',
+    'Use snake_case for file_names in this_project.',
+    'A path like /usr/local/bin and a_b_c_d.',
+    'Math: 2 * 3 * 4 = 24.',
+  ]
+  for (const line of unchanged) assert.equal(markdownToPlain(line), line)
+
+  assert.equal(
+    markdownToPlain('Emphasis *should* go and **strong** too.'),
+    'Emphasis should go and strong too.',
+  )
+  assert.equal(
+    markdownToPlain('Underscore alone: _emphasis_ works.'),
+    'Underscore alone: emphasis works.',
+  )
+  assert.equal(
+    markdownToPlain('Strong _under_ score: __both__ ways.'),
+    'Strong under score: both ways.',
+  )
+  // Emphasis inside a word is emphasis, by CommonMark, when it is an asterisk.
+  assert.equal(markdownToPlain('a*b*c'), 'abc')
 })
