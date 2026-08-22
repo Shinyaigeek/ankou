@@ -50,12 +50,24 @@ ${params || '      (none)'}`
   }).join('\n\n')
 }
 
+/** How many headings the planner is shown before the outline stops helping. */
+const OUTLINE_LIMIT = 25
+
 function profile(documents: Document[]): string {
   return documents
     .map((document) => {
-      const headings = document.sections
-        .filter((section) => section.title)
-        .slice(0, 25)
+      // A PDF has no headings, only lines that look like them, so its inferred
+      // structure can run to hundreds: an author list, an address block, every
+      // display equation. Showing the planner twelve email addresses in place of
+      // an outline is worse than showing it none. When there are more than fit,
+      // the ones that actually head something are the outline.
+      const titled = document.sections.filter((section) => section.title)
+      const outline =
+        titled.length > OUTLINE_LIMIT
+          ? titled.filter((section) => section.text.trim().length >= 200)
+          : titled
+      const headings = (outline.length > 0 ? outline : titled)
+        .slice(0, OUTLINE_LIMIT)
         .map((section) => `${'  '.repeat(Math.max(0, section.level - 1))}- ${section.title}`)
         .join('\n')
       return `Title: ${document.title}

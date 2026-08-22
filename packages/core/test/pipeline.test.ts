@@ -7,6 +7,7 @@ import {
   FORMATS,
   isPiece,
   KamuError,
+  plan as makePlan,
   render,
   renderTuiText,
   validate,
@@ -530,4 +531,47 @@ test('the animation puts every scene on paper, since paper cannot move', async (
     /requestIdleCallback|setTimeout\(fillForPrint/,
     'a headless print fires no event',
   )
+})
+
+test('the planner is shown an outline, not an author list', async () => {
+  // A PDF has no headings, only lines that look like them, so a paper's inferred
+  // structure runs to hundreds: every author, affiliation and email became a
+  // heading, and the planner saw twelve email addresses where the outline goes.
+  const noise = Array.from({ length: 40 }, (_, i) => ({
+    level: 1,
+    title: `author${i}@example.com`,
+    text: '',
+  }))
+  const real = [
+    { level: 1, title: 'Abstract', text: 'x'.repeat(400) },
+    { level: 1, title: '1 Introduction', text: 'y'.repeat(400) },
+  ]
+  const document = {
+    id: 'd',
+    title: 'A Paper',
+    origin: { kind: 'pdf' as const, ref: 'paper.pdf' },
+    text: 'body',
+    sections: [...real.slice(0, 1), ...noise, ...real.slice(1)],
+    meta: {},
+    charCount: 4,
+    lang: 'en',
+  }
+
+  let prompt = ''
+  const spy = {
+    name: 'spy',
+    async complete() {
+      return '{}'
+    },
+    async structured<T>(request: any): Promise<T> {
+      prompt = request.prompt
+      return { format: 'summary', rationale: '', params: {} } as T
+    },
+  }
+  await makePlan([document], 'what does this say', spy as never)
+
+  const outline = prompt.slice(prompt.indexOf('Outline:'))
+  assert.ok(outline.includes('- Abstract'), 'the real headings went missing')
+  assert.ok(outline.includes('- 1 Introduction'))
+  assert.ok(!outline.includes('@example.com'), 'the author list is still the outline')
 })
