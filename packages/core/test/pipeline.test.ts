@@ -661,3 +661,42 @@ test('a knob that is not a number falls back instead of poisoning the prompt', a
   // And out of range still clamps rather than falling back.
   assert.equal(await slideCountIn(-5), '3')
 })
+
+test('an empty source is refused before a model is asked to imagine one', async () => {
+  const llm = stubLlm()
+  let asked = 0
+  const counting = {
+    ...llm,
+    structured<T>(request: any): Promise<T> {
+      asked += 1
+      return llm.structured<T>(request)
+    },
+  }
+
+  await assert.rejects(
+    () =>
+      chew({
+        sources: [{ content: '   \n\n\t\n', name: 'blank.md' }],
+        intent: 'summarise it',
+        format: 'summary',
+        llm: counting as never,
+      }),
+    (error: unknown) => error instanceof KamuError && /no text in/.test((error as Error).message),
+  )
+  // The point is that it costs nothing: a model handed nothing writes a summary
+  // of the document it imagines you meant, and `requireContent` cannot catch
+  // that, because the model did return content.
+  assert.equal(asked, 0, 'a model was asked about an empty source')
+
+  // One empty source among several is not the same thing.
+  const { piece } = await chew({
+    sources: [
+      { content: '  ', name: 'blank.md' },
+      { content: SOURCE, name: 'real.md' },
+    ],
+    intent: '要点',
+    format: 'summary',
+    llm: stubLlm() as never,
+  })
+  assert.equal(piece.format, 'summary')
+})

@@ -1,4 +1,4 @@
-import { configError } from './errors.js'
+import { configError, ingestError } from './errors.js'
 import { type ComposeContext, getFormat } from './formats/index.js'
 import { type IngestOptions, ingestAll } from './ingest/index.js'
 import { createLLM, detectProvider } from './llm/index.js'
@@ -95,6 +95,17 @@ export async function chewPlan(options: ChewOptions): Promise<ChewPlanResult> {
   progress?.({ stage: 'ingest', message: 'Reading the sources' })
   const documents = await ingestAll(options.sources, options.ingest ?? {})
   if (documents.length === 0) throw configError('No sources to chew.')
+  // A model handed nothing does not say "there was nothing there". It writes a
+  // summary of the document it imagines you meant, and the run looks like it
+  // worked. `requireContent` cannot catch that: the model did return content.
+  if (documents.every((document) => document.charCount === 0)) {
+    throw ingestError(
+      documents.length === 1
+        ? `There is no text in ${documents[0]!.origin.ref}.`
+        : `There is no text in any of: ${documents.map((d) => d.origin.ref).join(', ')}.`,
+      'A model asked to read an empty source will invent one. Check the path, or whether the file is a scan or a client-rendered page.',
+    )
+  }
   options.signal?.throwIfAborted()
 
   progress?.({ stage: 'plan', message: 'Working out what shape you want' })
