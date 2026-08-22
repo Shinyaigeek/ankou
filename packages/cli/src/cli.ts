@@ -21,7 +21,7 @@ import {
   render,
   type Source,
 } from '@shinyaigeek/kamu-core'
-import { flagBool, flagList, flagString, parseArgs, parseParams } from './args.js'
+import { flagBool, flagList, flagString, nearestFlag, parseArgs, parseParams } from './args.js'
 import { loadConfig } from './config.js'
 import { formatsText, helpText, providersText } from './help.js'
 import { openInBrowser } from './open.js'
@@ -48,6 +48,21 @@ async function main(argv: string[]): Promise<number> {
   const args = parseArgs(argv)
   const quiet = flagBool(args, 'quiet') ?? false
   const ui = createUi(quiet)
+
+  // Before anything else: a flag nobody defined is a typo, and obeying the rest
+  // of the line anyway is how `--plan-onlyy` bills you for the run you were
+  // trying not to make.
+  if (args.unknown.length > 0) {
+    const [first] = args.unknown
+    const guess = nearestFlag(first!.replace(/^-+/, ''))
+    ui.error(
+      `Unknown ${args.unknown.length === 1 ? 'option' : 'options'}: ${args.unknown.join(', ')}.`,
+      guess
+        ? `Did you mean \`--${guess}\`? Run \`kamu --help\` for the full list.`
+        : 'Run `kamu --help` for the full list.',
+    )
+    return 1
+  }
 
   if (flagBool(args, 'version')) {
     process.stdout.write(`${VERSION}\n`)

@@ -28,7 +28,8 @@ node examples/gallery.mjs      # writes examples/out/*.html — open them
 pnpm check       # biome lint + format
 pnpm build       # tsc across every package
 pnpm typecheck   # tsc --noEmit
-pnpm test        # the pipeline against a stub model
+pnpm test        # every package's suite: the pipeline against a stub model,
+                 # ingestion, and the CLI's argument parsing
 ```
 
 `pnpm check:fix` applies the formatter and safe lint fixes.

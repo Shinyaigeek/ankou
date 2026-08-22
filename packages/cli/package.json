@@ -3,15 +3,31 @@
   "version": "0.1.0",
   "description": "Feed it markdown, text, HTML, PDFs or URLs, say what you want out of them, and read the result as a flipbook, deck, quiz, animation or summary.",
   "type": "module",
-  "bin": { "kamu": "./dist/cli.js" },
+  "bin": {
+    "kamu": "./dist/cli.js"
+  },
   "main": "./dist/cli.js",
-  "files": ["dist", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "test": "tsc -p tsconfig.json && node --test --experimental-strip-types test/*.test.ts"
   },
-  "keywords": ["cli", "llm", "reading", "flipbook", "slides", "quiz", "pdf", "claude"],
+  "keywords": [
+    "cli",
+    "llm",
+    "reading",
+    "flipbook",
+    "slides",
+    "quiz",
+    "pdf",
+    "claude"
+  ],
   "author": "Shinyaigeek",
   "license": "MIT",
   "homepage": "https://github.com/Shinyaigeek/kamu#readme",
@@ -20,8 +36,12 @@
     "url": "git+https://github.com/Shinyaigeek/kamu.git",
     "directory": "packages/cli"
   },
-  "bugs": { "url": "https://github.com/Shinyaigeek/kamu/issues" },
-  "engines": { "node": ">=22" },
+  "bugs": {
+    "url": "https://github.com/Shinyaigeek/kamu/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@shinyaigeek/kamu-core": "workspace:*"
   },
@@ -30,8 +50,14 @@
     "unpdf": ">=0.12.0"
   },
   "peerDependenciesMeta": {
-    "@anthropic-ai/claude-agent-sdk": { "optional": true },
-    "unpdf": { "optional": true }
+    "@anthropic-ai/claude-agent-sdk": {
+      "optional": true
+    },
+    "unpdf": {
+      "optional": true
+    }
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }

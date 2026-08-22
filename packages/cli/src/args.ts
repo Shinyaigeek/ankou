@@ -2,6 +2,8 @@ export interface ParsedArgs {
   command?: string
   positionals: string[]
   flags: Record<string, string | boolean | string[]>
+  /** Flags nobody defined. Reported rather than obeyed — see `parseArgs`. */
+  unknown: string[]
 }
 
 const ALIASES: Record<string, string> = {
@@ -33,11 +35,53 @@ const VALUED = new Set([
   'encoding',
 ])
 
+const BOOLEAN = new Set(['open', 'play', 'full', 'plan-only', 'quiet', 'help', 'version'])
+
+const KNOWN = new Set([...VALUED, ...BOOLEAN])
+
 const REPEATABLE = new Set(['param'])
 
+/** How far apart two flag names are, for "did you mean". */
+function distance(a: string, b: string): number {
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    let previous = row[0]!
+    row[0] = i
+    for (let j = 1; j <= b.length; j++) {
+      const current = row[j]!
+      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1))
+      previous = current
+    }
+  }
+  return row[b.length]!
+}
+
+/** The known flag a mistyped one probably meant, if any is close enough. */
+export function nearestFlag(name: string): string | undefined {
+  let best: string | undefined
+  let bestScore = Math.min(3, Math.ceil(name.length / 2))
+  for (const candidate of KNOWN) {
+    const score = distance(name, candidate)
+    if (score < bestScore) {
+      best = candidate
+      bestScore = score
+    }
+  }
+  return best
+}
+
+/**
+ * Parse the command line, and remember what it did not recognise.
+ *
+ * An unknown flag used to become a boolean nobody read, which is the quiet kind
+ * of wrong: `--plan-onlyy` ran the full generation the reader was trying to
+ * avoid, and `--forma quiz` turned `quiz` into a source file. Unknown names are
+ * collected here and refused by the caller.
+ */
 export function parseArgs(argv: string[]): ParsedArgs {
   const positionals: string[] = []
   const flags: Record<string, string | boolean | string[]> = {}
+  const unknown: string[] = []
   let index = 0
 
   const set = (name: string, value: string | boolean) => {
@@ -58,17 +102,20 @@ export function parseArgs(argv: string[]): ParsedArgs {
     if (token.startsWith('--')) {
       const [rawName, inlineValue] = splitOnce(token.slice(2), '=')
       const name = ALIASES[rawName] ?? rawName
-      if (inlineValue !== undefined) set(name, inlineValue)
+      const negated = name.startsWith('no-') ? name.slice(3) : name
+      if (!KNOWN.has(negated)) unknown.push(`--${rawName}`)
+      else if (inlineValue !== undefined) set(name, inlineValue)
       else if (VALUED.has(name)) {
         set(name, argv[index + 1] ?? '')
         index += 1
-      } else if (name.startsWith('no-')) set(name.slice(3), false)
+      } else if (name !== negated) set(negated, false)
       else set(name, true)
     } else if (token.startsWith('-') && token.length > 1) {
       for (const [position, letter] of [...token.slice(1)].entries()) {
         const name = ALIASES[letter] ?? letter
         const isLast = position === token.length - 2
-        if (VALUED.has(name) && isLast) {
+        if (!KNOWN.has(name)) unknown.push(`-${letter}`)
+        else if (VALUED.has(name) && isLast) {
           set(name, argv[index + 1] ?? '')
           index += 1
         } else {
@@ -81,7 +128,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
     index += 1
   }
 
-  return { positionals, flags }
+  return { positionals, flags, unknown }
 }
 
 function splitOnce(input: string, separator: string): [string, string | undefined] {
