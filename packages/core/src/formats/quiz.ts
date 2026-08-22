@@ -52,6 +52,63 @@ interface QuizDraft {
   }[]
 }
 
+const normalise = (text: string) => text.trim().toLowerCase()
+
+/**
+ * Make a drafted question one that can actually be marked, or drop it.
+ *
+ * Both renderers grade by comparing the reader's pick against `answer` as choice
+ * ids, so a model that labels its choices with an empty string — or answers with
+ * the choice *text* instead of its id — produces a quiz that marks the right
+ * answer wrong. That is worse than a missing question, so the ids are reassigned
+ * here and the answers are rewritten to match, and anything still unmatched at
+ * the end takes the question with it.
+ */
+function gradeable(draft: QuizDraft['questions'][number]): Omit<Question, 'id'> | null {
+  const kind = draft.kind ?? 'single'
+  const base = {
+    kind,
+    prompt: draft.prompt.trim(),
+    explanation: draft.explanation ?? '',
+    ...(draft.evidence ? { evidence: draft.evidence } : {}),
+    difficulty: clamp(Math.round(draft.difficulty ?? 2), 1, 3) as 1 | 2 | 3,
+  }
+
+  // Short answers are free text and have nothing to reconcile against.
+  const drafted = (draft.choices ?? []).filter((choice) => choice.text?.trim())
+  if (kind === 'short' || drafted.length === 0) {
+    const answer = draft.answer.map(String).filter((text) => text.trim())
+    return answer.length > 0 ? { ...base, kind: 'short', answer } : null
+  }
+
+  const choices = drafted.map((choice, index) => ({
+    id: String.fromCharCode(97 + index).slice(0, 1),
+    text: choice.text.trim(),
+  }))
+  // Whatever the model called a choice — its own id, or the text of it — has to
+  // end up pointing at the letter the reader will click.
+  const byLabel = new Map<string, string>()
+  drafted.forEach((choice, index) => {
+    const id = choices[index]!.id
+    if (choice.id?.trim()) byLabel.set(normalise(choice.id), id)
+    byLabel.set(normalise(choice.text), id)
+    byLabel.set(id, id)
+  })
+
+  const answer = [
+    ...new Set(
+      draft.answer
+        .map((entry) => byLabel.get(normalise(String(entry))))
+        .filter((id): id is string => id !== undefined),
+    ),
+  ]
+  if (answer.length === 0) return null
+
+  // A single-choice question with several answers cannot be got right: the
+  // reader can only pick one. Take the model at its word about the kind.
+  return { ...base, choices, answer: kind === 'single' ? [answer[0]!] : answer }
+}
+
 export const quiz: FormatModule<'quiz'> = {
   id: 'quiz',
   label: 'Quiz',
@@ -103,17 +160,10 @@ ${chunk}
     const questions: Question[] = drafts
       .flatMap((draft) => draft.questions ?? [])
       .filter((question) => question.prompt?.trim() && question.answer?.length)
-      .map((question, index) => ({
-        id: `q${index + 1}`,
-        kind: question.kind ?? 'single',
-        prompt: question.prompt.trim(),
-        ...(question.choices?.length ? { choices: question.choices } : {}),
-        answer: question.answer.map(String),
-        explanation: question.explanation ?? '',
-        ...(question.evidence ? { evidence: question.evidence } : {}),
-        difficulty: clamp(Math.round(question.difficulty ?? 2), 1, 3) as 1 | 2 | 3,
-      }))
+      .map(gradeable)
+      .filter((question): question is Omit<Question, 'id'> => question !== null)
       .slice(0, total)
+      .map((question, index) => ({ id: `q${index + 1}`, ...question }))
 
     return {
       format: 'quiz',

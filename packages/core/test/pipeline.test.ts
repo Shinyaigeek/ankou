@@ -253,3 +253,70 @@ test('the output language follows the intent when the intent has one', async () 
   })
   assert.equal(inherited.piece.lang, 'ja')
 })
+
+test('quiz questions come out gradeable however the model labelled them', async () => {
+  const llm = stubLlm()
+  const sloppy = {
+    ...llm,
+    async structured<T>(request: any): Promise<T> {
+      if (request.name !== 'quiz') return llm.structured<T>(request)
+      return {
+        questions: [
+          {
+            // No ids at all, and the answer given as the choice text.
+            kind: 'single',
+            prompt: '報酬の支払期限は？',
+            choices: [
+              { id: '', text: '毎月末日' },
+              { id: '', text: '毎月十日' },
+            ],
+            answer: ['毎月末日'],
+            explanation: '第一条。',
+            difficulty: 1,
+          },
+          {
+            // A single-choice question the model marked every way at once.
+            kind: 'single',
+            prompt: '不可抗力は？',
+            choices: [
+              { id: 'x', text: '免責される' },
+              { id: 'y', text: '免責されない' },
+            ],
+            answer: ['x', 'y'],
+            explanation: '第二条。',
+            difficulty: 2,
+          },
+          {
+            // An answer that points at nothing: ungradeable, so it goes.
+            kind: 'single',
+            prompt: '有効期間は？',
+            choices: [{ id: 'a', text: '一年間' }],
+            answer: ['z'],
+            explanation: '第三条。',
+            difficulty: 1,
+          },
+        ],
+      } as T
+    },
+  }
+
+  const { piece } = await chew({
+    sources: [{ content: SOURCE }],
+    intent: '覚えたい',
+    format: 'quiz',
+    llm: sloppy as never,
+  })
+  assert.equal(piece.format, 'quiz')
+  if (piece.format !== 'quiz') return
+
+  assert.equal(piece.questions.length, 2, 'the ungradeable question should be dropped')
+  for (const question of piece.questions) {
+    const ids = new Set((question.choices ?? []).map((choice) => choice.id))
+    assert.ok(question.answer.length > 0)
+    for (const answer of question.answer) {
+      assert.ok(ids.has(answer), `${question.prompt}: answer ${answer} is not a choice`)
+    }
+    if (question.kind === 'single') assert.equal(question.answer.length, 1)
+  }
+  assert.deepEqual(piece.questions[0]?.answer, ['a'])
+})
