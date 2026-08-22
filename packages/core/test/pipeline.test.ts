@@ -416,3 +416,16 @@ test('a format refuses to hand back an empty piece', async () => {
     )
   }
 })
+
+test('the deck answers a hash that arrives after it has loaded', async () => {
+  const { piece } = await chew({
+    sources: [{ content: SOURCE }],
+    intent: 'x',
+    format: 'slides',
+    llm: stubLlm() as never,
+  })
+  const html = render(piece, 'html').content
+  // A slide number in the URL is an address; it has to work when someone pastes
+  // one into a deck that is already open, not only on a cold load.
+  assert.match(html, /addEventListener\('hashchange'/)
+})

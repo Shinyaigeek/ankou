@@ -97,7 +97,12 @@ const SCRIPT = `
     show(event.clientX < window.innerWidth / 3 ? at - 1 : at + 1);
   });
 
-  show(Math.max(0, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+  var fromHash = function () { return Math.max(0, (parseInt(location.hash.slice(1), 10) || 1) - 1); };
+  // The hash is a real address for a slide, so it has to work when it arrives
+  // late: a link pasted into an open deck, or the back button after a jump.
+  // show() writes the same hash back, and an unchanged hash fires nothing.
+  window.addEventListener('hashchange', function () { show(fromHash()); });
+  show(fromHash());
 })();
 `
 
