@@ -153,3 +153,25 @@ test('a title laid out across lines is still one line', () => {
   )
   assert.equal(document.title, 'What is Free Software? - GNU Project')
 })
+
+test('the text overrules a lang attribute that is plainly wrong', () => {
+  // Shipping `lang="en"` from a boilerplate theme is common, and believing it
+  // sends the prompts, the pacing and the ruby out in the wrong language.
+  const japanese =
+    '本契約は、甲と乙の間で締結される。甲は乙に対し、毎月末日までに報酬を支払うものとする。' +
+    '乙は、善良な管理者の注意をもって業務を遂行する。天災その他の不可抗力による遅延については、この限りではない。'
+  const page = (lang: string, body: string) =>
+    documentFromHtml(
+      `<html lang="${lang}"><body><article><p>${body}</p></article></body></html>`,
+      'x',
+    )
+
+  assert.equal(page('en', japanese).lang, 'ja', 'the text is plainly not English')
+  assert.equal(page('ja', japanese).lang, 'ja')
+
+  // Detection answers 'en' both for English and for "nothing to go on", so it
+  // never gets to overrule a claim it cannot actually contradict.
+  const german = 'Das ist ein deutscher Text. '.repeat(14)
+  assert.equal(page('de', german).lang, 'de')
+  assert.equal(page('en-GB', 'English prose here, plenty of it. '.repeat(12)).lang, 'en')
+})

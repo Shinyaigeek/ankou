@@ -197,6 +197,26 @@ export function documentFromHtml(
     })),
     meta: htmlLangAttr ? { ...meta, htmlLang: htmlLangAttr } : meta,
     charCount: charCount(text),
-    lang: htmlLangAttr?.slice(0, 2) || detectLang(text),
+    lang: pageLang(htmlLangAttr, text),
   }
+}
+
+/**
+ * The language to work in, given what the page claims and what it is made of.
+ *
+ * `<html lang>` is usually right and usually the only signal, so it wins by
+ * default. But it is also the field a template gets wrong most often — a
+ * Japanese site shipping `lang="en"` from a boilerplate theme is common — and
+ * believing it there sends the prompts, the pacing and the ruby out in the
+ * wrong language for a page that is plainly not English.
+ *
+ * So the text gets a veto, and only when it is sure: `detectLang` answers 'en'
+ * both for English and for "nothing to go on", which is not evidence of
+ * anything.
+ */
+function pageLang(attr: string | undefined, text: string): string {
+  const claimed = attr?.slice(0, 2).toLowerCase()
+  const detected = detectLang(text)
+  if (detected !== 'en' && detected !== claimed) return detected
+  return claimed || detected
 }
