@@ -1,3 +1,4 @@
+import { ingestError } from '../errors.js'
 import type { Document } from '../types.js'
 import { charCount, detectLang, normaliseText, shortHash } from '../util/text.js'
 import {
@@ -154,6 +155,21 @@ function toMarkdown(node: Node, depth = 0): string {
   }
 }
 
+/**
+ * A page whose markup dwarfs its text is almost always rendered client-side.
+ * Chewing thirty characters of shell is worse than saying so — and this has to
+ * apply to a saved file too, since "save it from the browser" is the advice.
+ */
+function assertNotEmptyShell(document: Document, htmlLength: number, ref: string): void {
+  if (document.charCount >= 200 || htmlLength < document.charCount * 20) return
+  throw ingestError(
+    `Only ${document.charCount} characters of text came out of ${ref}.`,
+    /^https?:/i.test(ref)
+      ? "The page probably renders its content with JavaScript. Save it from the browser (File → Save Page As) and pass the file, or use the site's feed or API."
+      : "The file probably renders its content with JavaScript. Save it from the browser (File → Save Page As) rather than downloading it, or use the site's feed or API.",
+  )
+}
+
 export interface HtmlIngestOptions {
   /** Skip content extraction and keep the whole body. */
   full?: boolean
@@ -186,7 +202,7 @@ export function documentFromHtml(
   const markdown = normaliseText(toMarkdown(content))
   const text = normaliseText(markdown.replace(/^#{1,6}\s+/gm, '').replace(/^- /gm, '・'))
 
-  return {
+  const document: Document = {
     id: shortHash(ref + text.slice(0, 512)),
     title: docTitle,
     origin: { kind: 'html', ref },
@@ -199,6 +215,8 @@ export function documentFromHtml(
     charCount: charCount(text),
     lang: pageLang(htmlLangAttr, text),
   }
+  assertNotEmptyShell(document, raw.length, ref)
+  return document
 }
 
 /**

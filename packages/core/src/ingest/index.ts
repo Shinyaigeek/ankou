@@ -82,18 +82,6 @@ function metaRefreshTarget(html: string, base: string): string | undefined {
   }
 }
 
-/**
- * A page whose markup dwarfs its text is almost always rendered client-side.
- * Chewing thirty characters of shell is worse than saying so.
- */
-function assertNotEmptyShell(document: Document, htmlLength: number): void {
-  if (document.charCount >= 200 || htmlLength < document.charCount * 20) return
-  throw ingestError(
-    `Only ${document.charCount} characters of text came out of ${document.origin.ref}.`,
-    "The page probably renders its content with JavaScript. Save it from the browser (File → Save Page As) and pass the file, or use the site's feed or API.",
-  )
-}
-
 async function ingestUrl(
   url: string,
   options: IngestOptions,
@@ -141,9 +129,7 @@ async function ingestUrl(
         : kind === 'text'
           ? documentFromText(body, url, name)
           : documentFromHtml(body, url, name, { full: options.full })
-    const resolved = { ...document, origin: { kind: 'url' as const, ref: url } }
-    if (kind === 'html') assertNotEmptyShell(resolved, body.length)
-    return resolved
+    return { ...document, origin: { kind: 'url' as const, ref: url } }
   } finally {
     clearTimeout(timer)
   }

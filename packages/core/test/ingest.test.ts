@@ -175,3 +175,13 @@ test('the text overrules a lang attribute that is plainly wrong', () => {
   assert.equal(page('de', german).lang, 'de')
   assert.equal(page('en-GB', 'English prose here, plenty of it. '.repeat(12)).lang, 'en')
 })
+
+test('a saved shell is reported too, since saving one is the advice we give', async () => {
+  // The URL path told the reader to save the page and pass the file — and the
+  // file path was the one without the check.
+  const shell = `<html><head><title>App</title></head><body><div id="root"></div>${'<script>var x=1;</script>'.repeat(200)}</body></html>`
+  await assert.rejects(
+    () => ingest({ content: shell, kind: 'html', name: 'app.html' }),
+    (error: unknown) => /characters of text/.test((error as Error).message),
+  )
+})
