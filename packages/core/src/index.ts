@@ -30,6 +30,7 @@ export {
   type FormatModule,
   getFormat,
   isFormatId,
+  isPiece,
 } from './formats/index.js'
 export {
   type IngestOptions,

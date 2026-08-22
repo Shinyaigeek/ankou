@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import {
   chew,
@@ -7,6 +7,7 @@ import {
   type Document,
   FORMAT_IDS,
   isFormatId,
+  isPiece,
   isRendererId,
   KamuError,
   type Piece,
@@ -16,6 +17,7 @@ import {
   playTui,
   providerStatus,
   RENDERERS,
+  type RendererId,
   render,
   type Source,
 } from '@shinyaigeek/kamu-core'
@@ -68,6 +70,53 @@ async function main(argv: string[]): Promise<number> {
 
   const config = await loadConfig()
 
+  const rendererFlag = flagBool(args, 'play')
+    ? 'tui'
+    : (flagString(args, 'render') ?? config.renderer ?? 'html')
+  if (!isRendererId(rendererFlag)) {
+    ui.error(`Unknown renderer \`${rendererFlag}\`.`, `Known renderers: ${RENDERERS.join(', ')}.`)
+    return 1
+  }
+  const theme = (flagString(args, 'theme') ?? config.theme ?? 'auto') as 'dark' | 'light' | 'auto'
+
+  // `kamu render <piece.json>` — a piece outlives the run that made it, so
+  // changing the surface it is read on should not mean paying the model again.
+  if (command === 'render') {
+    const source = args.positionals[1]
+    if (!source) {
+      ui.error(
+        'kamu render needs a piece to render.',
+        'e.g. kamu render deck.json --render html — or "-" to read stdin.',
+      )
+      return 1
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(source === '-' ? await readStdin() : await readFile(source, 'utf8'))
+    } catch (error) {
+      ui.error(
+        `Could not read a piece from \`${source}\`.`,
+        error instanceof Error ? error.message : undefined,
+      )
+      return 1
+    }
+    if (!isPiece(parsed)) {
+      ui.error(
+        `\`${source}\` is not a kamu piece.`,
+        `A piece is what \`--render json\` writes, and its \`format\` must be one of: ${FORMAT_IDS.join(', ')}.`,
+      )
+      return 1
+    }
+    return deliver(parsed, {
+      args,
+      config,
+      ui,
+      renderer: rendererFlag,
+      theme,
+      signal: new AbortController().signal,
+    })
+  }
+
   // --- resolve the sources -------------------------------------------------
   const sources: Source[] = []
   for (const positional of args.positionals) {
@@ -97,21 +146,12 @@ async function main(argv: string[]): Promise<number> {
     return 1
   }
 
-  const rendererFlag = flagBool(args, 'play')
-    ? 'tui'
-    : (flagString(args, 'render') ?? config.renderer ?? 'html')
-  if (!isRendererId(rendererFlag)) {
-    ui.error(`Unknown renderer \`${rendererFlag}\`.`, `Known renderers: ${RENDERERS.join(', ')}.`)
-    return 1
-  }
-
   const providerFlag = flagString(args, 'provider') ?? config.provider
   if (providerFlag && !(PROVIDERS as string[]).includes(providerFlag)) {
     ui.error(`Unknown provider \`${providerFlag}\`.`, `Known providers: ${PROVIDERS.join(', ')}.`)
     return 1
   }
 
-  const theme = (flagString(args, 'theme') ?? config.theme ?? 'auto') as 'dark' | 'light' | 'auto'
   const windowChars = Number(flagString(args, 'window') ?? config.windowChars ?? 24_000)
   const controller = new AbortController()
   process.once('SIGINT', () => controller.abort())
@@ -177,17 +217,44 @@ async function main(argv: string[]): Promise<number> {
     return 0
   }
 
-  // --- render --------------------------------------------------------------
+  return deliver(piece, {
+    args,
+    config,
+    ui,
+    renderer: rendererFlag,
+    theme,
+    signal: controller.signal,
+  })
+}
+
+interface DeliverContext {
+  args: ReturnType<typeof parseArgs>
+  config: Awaited<ReturnType<typeof loadConfig>>
+  ui: ReturnType<typeof createUi>
+  renderer: RendererId
+  theme: 'dark' | 'light' | 'auto'
+  signal: AbortSignal
+}
+
+/**
+ * Put a finished piece somewhere: a live terminal session, stdout, or a file.
+ *
+ * Shared by chewing and by `kamu render`, because where the piece came from —
+ * a model just now, or a JSON file from last week — makes no difference to
+ * where it should go.
+ */
+async function deliver(piece: Piece, context: DeliverContext): Promise<number> {
+  const { args, config, ui, renderer, theme } = context
   const outFlag = flagString(args, 'out')
 
-  if (rendererFlag === 'tui' && !outFlag && process.stdout.isTTY && process.stdin.isTTY) {
-    await playTui(piece, { signal: controller.signal })
+  if (renderer === 'tui' && !outFlag && process.stdout.isTTY && process.stdin.isTTY) {
+    await playTui(piece, { signal: context.signal })
     return 0
   }
 
-  const output = render(piece, rendererFlag, { theme })
+  const output = render(piece, renderer, { theme })
 
-  if (outFlag === '-' || (!outFlag && rendererFlag !== 'html')) {
+  if (outFlag === '-' || (!outFlag && renderer !== 'html')) {
     process.stdout.write(output.content)
     return 0
   }

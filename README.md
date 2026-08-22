@@ -70,6 +70,11 @@ are pure functions of a Piece, so the same chewed result can be played in a
 terminal, opened in a browser, or handed to another program as JSON without
 asking the model to do the work twice.
 
+```sh
+kamu paper.pdf -i "覚えたい" --render json -o piece.json   # once, with a model
+kamu render piece.json --open                              # and again, and again
+```
+
 ## The formats
 
 | Format | What it is | Reach for it when |
@@ -114,6 +119,9 @@ navigation and cookie banners do not end up in your flipbook).
 -m, --model <id>       Model name for that provider.
     --param k=v        Format knob, repeatable: --param slideCount=12
     --plan-only        Print what it would make and stop, without making it.
+
+`kamu render <piece.json>` renders a piece saved earlier onto another surface.
+No model, no network, no waiting.
 ```
 
 Config lives at `~/.config/kamu/config.json`; flags beat environment beats file.

@@ -69,9 +69,21 @@ than something the model promised.
 
 ```bash
 kamu spec.md -i "一字一句漏らさず頭に入れたい" -o out.html      # html, the default
-kamu post.md -i "覚えたい" --render json -o -                  # the structure, to stdout
+kamu post.md -i "覚えたい" --render json -o piece.json         # the structure, saved
 kamu post.md -i "覚えたい" --render tui -o -                   # a plain transcript
 ```
+
+On anything that cost a `claude-code` run, **save the piece** (`--render json -o
+piece.json`) and change surfaces with `kamu render` afterwards:
+
+```bash
+kamu render piece.json -o out.html      # instant; no model, no network
+kamu render piece.json --render tui -o -
+```
+
+Rendering is a pure function of the piece, so a second surface is free. Re-running
+kamu to get the same content as HTML instead of JSON pays the model twice for one
+answer, and gives you a *different* answer the second time.
 
 Relative sources and `-o` resolve against the directory you are standing in. Write outputs
 to the session scratchpad, never into the repo.
@@ -82,9 +94,9 @@ user at their own terminal; do not run it expecting to see anything.
 
 ## 5. Read it before you hand it over
 
-A run that exits 0 has produced a well-formed page, not necessarily a good one. `--render
-json` on the same piece, or a second run with `--render tui -o -`, shows you what the model
-actually wrote. Check the thing the format promises:
+A run that exits 0 has produced a well-formed page, not necessarily a good one. Read the
+saved piece — the JSON directly, or `kamu render piece.json --render tui -o -` for
+something laid out — and check the thing the format promises:
 
 - **flipbook** — is the body verbatim? grep a distinctive sentence from the source.
 - **quiz** — every `answer` must be an id that appears in that question's `choices`.

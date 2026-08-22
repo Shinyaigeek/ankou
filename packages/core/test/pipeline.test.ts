@@ -4,6 +4,7 @@ import {
   chew,
   chewPlan,
   FORMAT_IDS,
+  isPiece,
   KamuError,
   render,
   renderTuiText,
@@ -415,6 +416,36 @@ test('a format refuses to hand back an empty piece', async () => {
       `${format} rendered an empty piece instead of failing`,
     )
   }
+})
+
+test('a piece survives a round trip through JSON and renders again', async () => {
+  // The claim the whole Piece boundary exists to make: one model call, many
+  // surfaces, including surfaces chosen long after the model has gone home.
+  for (const format of FORMAT_IDS) {
+    const { piece } = await chew({
+      sources: [{ content: SOURCE, name: 'contract.md' }],
+      intent: 'ちゃんと読みたい',
+      format,
+      llm: stubLlm() as never,
+    })
+
+    const stored = render(piece, 'json').content
+    const restored: unknown = JSON.parse(stored)
+    assert.ok(isPiece(restored), `${format} did not survive the round trip`)
+
+    assert.equal(render(restored, 'html').content, render(piece, 'html').content)
+    assert.equal(render(restored, 'json').content, stored)
+  }
+})
+
+test('isPiece rejects what is not a piece', () => {
+  assert.equal(isPiece(null), false)
+  assert.equal(isPiece('slides'), false)
+  assert.equal(isPiece({}), false)
+  assert.equal(isPiece({ format: 'poster' }), false, 'an unknown format is not a piece')
+  // Deliberately thin: a piece written by a version that knew a field fewer is
+  // still a piece, and the renderers cope.
+  assert.equal(isPiece({ format: 'slides' }), true)
 })
 
 test('the deck answers a hash that arrives after it has loaded', async () => {

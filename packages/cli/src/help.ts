@@ -17,6 +17,7 @@ export function helpText(colour: boolean): string {
 
 ${c('USAGE', ansi.bold)}
   kamu <source...> --intent "<what you want out of it>" [options]
+  kamu render <piece.json> [--render html|tui|json] [-o <file>]
   kamu formats
   kamu providers
 
@@ -28,11 +29,13 @@ ${c('EXAMPLES', ansi.bold)}
   kamu https://example.com/post -i "覚えたい" --render tui
   kamu paper.pdf notes.md -i "explain it to me like I have never seen it"
   cat draft.txt | kamu - -i "make it land" --format animation --open
+  kamu post.md -i "覚えたい" --render json -o piece.json && kamu render piece.json --open
 
 ${c('OPTIONS', ansi.bold)}
   -i, --intent <text>     What you want out of the source. This is the brief.
   -f, --format <id>       Skip the planner and use this format.
   -r, --render <id>       ${RENDERERS.join(' | ')}  (default: html)
+                          json writes the piece; "kamu render" reads it back.
   -o, --out <file>        Where to write. Default: a file next to your cwd.
       --open              Open the result when it is written.
       --play              Shorthand for --render tui.
