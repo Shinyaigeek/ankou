@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { languageName } from '../dist/formats/base.js'
 import {
   chew,
   chewPlan,
@@ -699,4 +700,36 @@ test('an empty source is refused before a model is asked to imagine one', async 
     llm: stubLlm() as never,
   })
   assert.equal(piece.format, 'summary')
+})
+
+test('the prompt names the language, rather than reciting its tag', async () => {
+  // "Write all reader-facing text in fr." is a worse instruction than "in
+  // French", and everything outside a five-entry table used to get the tag.
+  assert.equal(languageName('ja'), 'Japanese')
+  assert.equal(languageName('fr'), 'French')
+  assert.equal(languageName('nl'), 'Dutch')
+  assert.equal(languageName('pt-BR'), 'Brazilian Portuguese')
+  assert.equal(languageName('zh-Hant'), 'Traditional Chinese')
+  // A tag nobody can name is still better than nothing at all.
+  assert.equal(languageName('xx'), 'xx')
+  assert.equal(languageName(''), 'the language of the source')
+
+  // And it reaches the model that way.
+  let system = ''
+  const llm = stubLlm()
+  const watch = {
+    ...llm,
+    async structured<T>(request: any): Promise<T> {
+      if (request.name === 'dialogue') system = request.system ?? ''
+      return llm.structured<T>(request)
+    },
+  }
+  await chew({
+    sources: [{ content: SOURCE }],
+    intent: 'x',
+    format: 'dialogue',
+    lang: 'fr',
+    llm: watch as never,
+  })
+  assert.match(system, /in French\./)
 })

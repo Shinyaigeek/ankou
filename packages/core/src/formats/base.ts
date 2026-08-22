@@ -50,8 +50,26 @@ export const LANG_NAMES: Record<string, string> = {
   ru: 'Russian',
 }
 
+/**
+ * Name a language the way the prompt has to say it.
+ *
+ * "Write all reader-facing text in fr." is a worse instruction than "in French",
+ * and the five-entry table left every other language as its tag. `Intl` knows
+ * all of them and ships with Node, so the table is now only a fast path and a
+ * guarantee for the languages kamu cares most about.
+ */
 export function languageName(lang: string): string {
-  return LANG_NAMES[lang] ?? lang
+  const tag = lang.trim()
+  if (!tag) return 'the language of the source'
+  try {
+    const named = new Intl.DisplayNames(['en'], { type: 'language' }).of(tag)
+    // A tag `Intl` does not recognise comes back unchanged, which is no better
+    // than not asking; the table below still gets its turn.
+    if (named && named !== tag) return named
+  } catch {
+    // A Node built without the full locale data. The table is the guarantee.
+  }
+  return LANG_NAMES[tag] ?? LANG_NAMES[tag.slice(0, 2).toLowerCase()] ?? tag
 }
 
 /** The system prompt every format shares. */
