@@ -320,3 +320,44 @@ test('quiz questions come out gradeable however the model labelled them', async 
   }
   assert.deepEqual(piece.questions[0]?.answer, ['a'])
 })
+
+test('dialogue turns land on a real speaker even when the model drifts', async () => {
+  const llm = stubLlm()
+  const drifting = {
+    ...llm,
+    async structured<T>(request: any): Promise<T> {
+      if (request.name !== 'dialogue') return llm.structured<T>(request)
+      return {
+        title: '契約書を読む',
+        speakers: [
+          { id: 'sensei', name: '先生', role: '契約に詳しい' },
+          { id: 'seito', name: '生徒', role: '初めて読む' },
+        ],
+        turns: [
+          { speaker: 'seito', text: '第二条は何を言っているんですか？' },
+          { speaker: '先生', text: '注意義務の水準です。' }, // the name, not the id
+          { speaker: 'ナレーター', text: 'そこで二人は黙った。' }, // nobody at all
+          { speaker: 'SENSEI', text: '続けましょう。' }, // the right id, shouting
+        ],
+      } as T
+    },
+  }
+
+  const { piece } = await chew({
+    sources: [{ content: SOURCE }],
+    intent: '解説してほしい',
+    format: 'dialogue',
+    llm: drifting as never,
+  })
+  assert.equal(piece.format, 'dialogue')
+  if (piece.format !== 'dialogue') return
+
+  const ids = new Set(piece.speakers.map((speaker) => speaker.id))
+  for (const turn of piece.turns) assert.ok(ids.has(turn.speaker), `stray speaker ${turn.speaker}`)
+  assert.deepEqual(
+    piece.turns.map((turn) => turn.speaker),
+    // The name and the shouted id resolve; only the invented one falls back,
+    // and it falls back to whoever did not just speak.
+    ['seito', 'sensei', 'seito', 'sensei'],
+  )
+})

@@ -85,7 +85,28 @@ ${chunk}
           { id: 'guide', name: 'Guide', role: 'Knows the material' },
           { id: 'learner', name: 'Learner', role: 'Meeting it for the first time' },
         ]
-    const known = new Set(speakers.map((speaker) => speaker.id))
+    // A model that drifts off the ids it declared still has to land on a real
+    // speaker. Most drift is cosmetic — "Nova" for `nova`, or the display name
+    // instead of the id — so match on that first.
+    const byLabel = new Map<string, string>()
+    for (const speaker of speakers) {
+      byLabel.set(speaker.id.trim().toLowerCase(), speaker.id)
+      byLabel.set(speaker.name.trim().toLowerCase(), speaker.id)
+    }
+
+    let previous: string | undefined
+    const turns = drafts
+      .flatMap((draft) => draft.turns ?? [])
+      .filter((turn) => turn.text?.trim())
+      .map((turn) => {
+        // Real drift falls back to whoever did not just speak: a dialogue that
+        // alternates is wrong about one line, one that does not reads as a
+        // monologue with the wrong name on it.
+        const other = speakers.find((speaker) => speaker.id !== previous) ?? speakers[0]!
+        const speaker = byLabel.get(turn.speaker?.trim().toLowerCase() ?? '') ?? other.id
+        previous = speaker
+        return { speaker, text: turn.text.trim() }
+      })
 
     return {
       format: 'dialogue',
@@ -93,14 +114,7 @@ ${chunk}
       lang: context.lang,
       meta: baseMeta(context),
       speakers,
-      turns: drafts
-        .flatMap((draft) => draft.turns ?? [])
-        .filter((turn) => turn.text?.trim())
-        .map((turn) => ({
-          // A model that drifts to a new speaker id still has to land on a real one.
-          speaker: known.has(turn.speaker) ? turn.speaker : speakers[0]!.id,
-          text: turn.text.trim(),
-        })),
+      turns,
     }
   },
 }
