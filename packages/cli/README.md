@@ -4,7 +4,7 @@ Feed it markdown, text, HTML, PDFs or URLs, say what you want out of them, and
 read the result as a flipbook, a deck, a quiz, an animation or a summary.
 
 ```sh
-npm i -g kamu
+# install from a checkout: ./scripts/install-local.sh
 
 kamu spec.md --intent "一字一句漏らさず頭に入れたい"
 kamu https://example.com/post --intent "I need to remember this" --play

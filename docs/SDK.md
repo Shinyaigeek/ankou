@@ -1,8 +1,7 @@
 # SDK
 
-```sh
-npm i @shinyaigeek/kamu-core
-```
+Not on the registry yet: work inside the checkout, where the workspace resolves
+`@shinyaigeek/kamu-core` to `packages/core` (see the README for the install).
 
 ESM, Node 22+, no runtime dependencies.
 

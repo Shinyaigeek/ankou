@@ -28,12 +28,24 @@ something else.
 
 ## Install
 
+Nothing is published yet — the bare `kamu` name on npm belongs to an unrelated
+package — so it installs from a checkout:
+
 ```sh
-npm i -g kamu            # the CLI
-npm i @shinyaigeek/kamu-core   # the SDK
+git clone https://github.com/Shinyaigeek/kamu.git
+cd kamu
+./scripts/install-local.sh          # builds, then links ~/.local/bin/kamu
 ```
 
-Node 22+. Optional extras, installed only if you need them:
+Node 22+ and pnpm. `BIN_DIR=/usr/local/bin ./scripts/install-local.sh` links it
+somewhere else, and `git pull && pnpm build` keeps the linked command current.
+To run it without putting anything on PATH: `pnpm build && pnpm kamu <args>`.
+
+The SDK is the same checkout — `packages/core`, which the workspace resolves as
+`@shinyaigeek/kamu-core`.
+
+Optional extras, both already pulled in by `pnpm install` and only needed if you
+are installing them somewhere else:
 
 ```sh
 npm i unpdf                              # PDF sources
@@ -203,8 +215,12 @@ More in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## Status
 
-Early. The format set, the CLI flags and the `Piece` shapes may still move.
-Pinning an exact version is wise until 1.0.
+Early, and installed from source: the format set, the CLI flags and the `Piece`
+shapes may still move, and publishing waits on a name — `kamu` on npm is taken
+by something unrelated, so it would ship scoped.
+
+Every format has been run end to end against a real model; the providers, the
+pipeline and the renderers are covered by `pnpm test`.
 
 ## License
 
