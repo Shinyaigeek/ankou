@@ -22,7 +22,11 @@ updates:
     schedule:
       interval: weekly
     groups:
+      # Minor and patch only. A major arrives as its own PR — grouping them
+      # means one upstream rewrite (say tsc 5 → 7) holds every other bump
+      # hostage in a PR nobody can merge.
       toolchain:
         patterns: ['*']
+        update-types: [minor, patch]
     commit-message:
       prefix: deps
