@@ -26,6 +26,18 @@ CLI flags and the `Piece` shapes may still move in a minor release.
 
 ### Added
 
+- **An MCP server: `ankou mcp`.** Nine tools over stdio, and exactly one of them
+  needs a model — which is yours. `ankou_carve_start` runs the ordinary
+  pipeline and parks wherever it would have called a provider, handing out the
+  schema and the prompt; `ankou_carve_answer` feeds the answer back in. The
+  point is that the answer can be written by something that just went and read
+  what the document cites. Everything either side stays ankou's: the flipbook
+  body is still sliced from the source, params are still clamped, pieces are
+  still validated. See [docs/MCP.md](docs/MCP.md).
+- **`ankou_gaps` / `gaps()`** — what a document leans on but never explains:
+  undefined acronyms, citations, links and pointers to material that is not in
+  the sources. No model involved. It is the list of things a composer would
+  otherwise have had to guess at.
 - **A site**: [shinyaigeek.github.io/ankou](https://shinyaigeek.github.io/ankou/),
   built from this repository on every push to `main`. Every format is embedded
   live on it, rendered by `examples/gallery.mjs`, so the tour cannot drift from

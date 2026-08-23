@@ -79,6 +79,13 @@ async function main(argv: string[]): Promise<number> {
     process.stdout.write(providersText(await providerStatus(), ui.colour))
     return 0
   }
+  // `ankou mcp` speaks JSON-RPC on stdio and never returns until the client
+  // hangs up, so it is dispatched before anything that might write to stdout.
+  if (command === 'mcp') {
+    const { runMcpServer } = await import('./mcp/server.js')
+    await runMcpServer()
+    return 0
+  }
   if (flagBool(args, 'help') || args.positionals.length === 0) {
     process.stdout.write(helpText(ui.colour))
     return args.positionals.length === 0 && !flagBool(args, 'help') ? 1 : 0

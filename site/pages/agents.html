@@ -3,10 +3,14 @@
     <p class="eyebrow">Agents</p>
     <h1>Built to be called by something else</h1>
     <p class="lede">
-      Half the point of ankou is embedding it. An agent already knows what the user asked
-      for — that sentence <em>is</em> the intent — and what comes back is typed JSON, not a
-      blob of prose it has to re-read.
+      Half the point of ankou is embedding it. An agent already knows what the user
+      asked for — that sentence <em>is</em> the intent — and it can do something no
+      pipeline can: go and find out the part the document assumes you already know.
     </p>
+    <div class="cta">
+      <a class="btn primary" href="#mcp">Wire up MCP</a>
+      <a class="btn" href="#sdk">Use the SDK instead</a>
+    </div>
   </div>
 
   <div class="cards">
@@ -15,8 +19,8 @@
       <h3>A Piece is plain JSON</h3>
       <p class="muted">
         Persist it, cache it, send it to a browser, hand it to the next agent. It is
-        smaller than the HTML, it is queryable, and every other renderer is one pure call
-        away.
+        smaller than the HTML, it is queryable, and every other renderer is one pure
+        call away.
       </p>
     </div>
     <div class="card">
@@ -31,19 +35,129 @@
       <p class="card-glyph">why it fits</p>
       <h3>The decision is cheap and separable</h3>
       <p class="muted">
-        <code>carvePlan()</code> is one small call: the format it would pick and the
-        rationale, in the user's language. Show it, route on it, or price the job before
-        committing to it.
+        The plan is one small call: the format it would pick and the rationale, in the
+        user's language. Show it, route on it, or price the job before committing.
       </p>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="mcp">
+  <div class="section-head">
+    <p class="eyebrow">MCP</p>
+    <h2>Nine tools. One of them needs a model, and it is yours.</h2>
+    <p class="lede">
+      <code>ankou mcp</code> speaks JSON-RPC on stdio. No API key anywhere in it —
+      under MCP the host is the model.
+    </p>
+  </div>
+
   <div class="split wide-right">
     <div>
-      <p class="eyebrow">The shape of it</p>
-      <h2>One tool, three arguments</h2>
+      <p>
+        ankou's pipeline is fixed: ingest, plan, window, ask, assemble, render. Under an
+        API provider that <em>ask</em> is a request to a vendor with the window in front
+        of it and nothing else. Which is fine until the document points somewhere it
+        cannot follow — a spec citing RFC 7231 §6.5.1, a design doc naming an internal
+        service, a paper leaning on an acronym introduced in a different paper. A model
+        asked to compose anyway does compose, plausibly, and nobody can tell afterwards
+        which parts were read and which were assumed.
+      </p>
+      <p>
+        An agent is not stuck like that. So over MCP the ask becomes a question handed
+        back to you, with the schema attached — and you answer it after going to look.
+      </p>
+      <div class="callout">
+        <p>
+          <strong>Delegating composition does not delegate the guarantees.</strong> The
+          flipbook body is still sliced verbatim from the source, params are still
+          clamped, windows still windowed, and the piece is still validated before
+          anything renders it. None of that ever lived in the model call.
+        </p>
+      </div>
+      <p>
+        <a href="https://github.com/Shinyaigeek/ankou/blob/main/docs/MCP.md" rel="noreferrer">The full tool reference is in docs/MCP.md →</a>
+      </p>
+    </div>
+
+    <div>
+      <div class="code"><pre><code><span class="cm">// .mcp.json, or wherever your host keeps its servers</span>
+{
+  "mcpServers": {
+    "ankou": { "command": "npx", "args": ["-y", "ankou", "mcp"] }
+  }
+}</code></pre></div>
+
+      <div class="code"><pre><code>ankou_ingest   { sources: ["./RFC.md"] }
+  → { docId: "doc-1", windows: 3 }        <span class="cm">// the map, not the body</span>
+
+ankou_gaps     { docId: "doc-1" }
+  → [ { kind: "citation", text: "RFC 7231", count: 4 },
+      { kind: "acronym",  text: "MTBF",     count: 7 } ]
+
+  <span class="hl">← go and resolve the ones that matter</span>
+
+ankou_carve_start  { sources, intent: "review this properly" }
+  → { state: "awaiting-model",
+      request: { name: "reading_plan", schema: {…} } }
+
+ankou_carve_answer { carveId, output: { format: "summary", … } }
+  → … one request per window …
+  → { state: "done", piece: {…} }
+
+ankou_render   { piece: carveId }
+  → { path: "/tmp/ankou-x9f/piece.html" }</code></pre></div>
+      <p class="muted">
+        Neither ingest nor render hands you bulk: a 200-page PDF is read a window at a
+        time with <code>ankou_read</code>, and a rendered page goes to a file and comes
+        back as a path. Your context is for thinking, not for storing the artefact.
+      </p>
+    </div>
+  </div>
+
+  <div class="cards" style="margin-top:2.5rem">
+    <div class="card">
+      <p class="card-glyph">ankou_gaps</p>
+      <h3>What the document never explains</h3>
+      <p class="muted">
+        Undefined acronyms, citations, links, pointers to material that is not in the
+        sources — found without a model. This is the list of things a one-shot composer
+        would have had to guess at, handed to the one thing that can go and check.
+      </p>
+    </div>
+    <div class="card">
+      <p class="card-glyph">retry</p>
+      <h3>A rejected answer costs a retry</h3>
+      <p class="muted">
+        Output that the schema will not accept comes back as problems, and the carve
+        stays exactly where it was. The same courtesy ankou extends to a provider whose
+        JSON does not fit.
+      </p>
+    </div>
+    <div class="card">
+      <p class="card-glyph">no key</p>
+      <h3>Nothing to provision</h3>
+      <p class="muted">
+        An agent working in someone's checkout can reshape a spec without asking them
+        for credentials first, because the only model involved is the one already
+        running the agent.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sdk">
+  <div class="section-head">
+    <p class="eyebrow">SDK</p>
+    <h2>Or call it directly</h2>
+    <p class="lede">
+      If the agent is yours and lives in Node, skip the protocol: one dependency, the
+      same pipeline, your model passed in.
+    </p>
+  </div>
+  <div class="split wide-right">
+    <div>
+      <h3>One tool, three arguments</h3>
       <p>
         Sources, the user's own words, and optionally a format if they were specific
         (<em>"make me a quiz"</em>). Leave the format out and the planner decides.
@@ -185,11 +299,12 @@ cat draft.md | ankou - -i "make it land" -f animation --open</code></pre></div>
     </div>
     <div>
       <p class="eyebrow">On a developer's machine</p>
-      <h2>A coding agent needs no key</h2>
+      <h2>The CLI without a key, too</h2>
       <p>
+        Over MCP the question does not arise — the host is the model. For the CLI path,
         <code>--provider claude-code</code> runs generation through the Claude Agent SDK
-        and authenticates with a Claude Code subscription — so an agent working in someone's
-        checkout can carve a spec without asking them to provision credentials first.
+        and authenticates with a Claude Code subscription, so an agent that would rather
+        shell out than speak a protocol still needs nothing provisioned.
       </p>
       <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
 ankou ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>

@@ -34,6 +34,7 @@ export {
   isPiece,
   pieceProblems,
 } from './formats/index.js'
+export { type Gap, type GapKind, type GapOptions, gaps } from './gaps.js'
 export {
   charsetFromBom,
   charsetFromContentType,

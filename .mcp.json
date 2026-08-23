@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ankou": {
+      "command": "node",
+      "args": ["packages/cli/dist/cli.js", "mcp"],
+      "env": {}
+    }
+  }
+}

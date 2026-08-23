@@ -31,8 +31,17 @@ ankou paper.pdf notes.md --intent "explain it to me like I have never seen it"
 # → dialogue: two voices working through it
 ```
 
-Ships as a CLI **and** an SDK, because half the point is embedding it in
-something else.
+Ships as a CLI, an SDK **and** an MCP server, because half the point is
+embedding it in something else:
+
+```sh
+ankou mcp        # nine tools; exactly one of them needs a model, and that one is yours
+```
+
+Under MCP the host is the model. ankou still ingests, plans, windows, assembles
+and renders — it just hands the composing out one schema-shaped question at a
+time, so the answers can be written by something that can go and read the RFC
+the document cites first. [docs/MCP.md](./docs/MCP.md).
 
 ---
 
@@ -207,7 +216,8 @@ const { piece } = await carve({ sources, intent, format: 'quiz' })
 piece.questions   // fully typed
 ```
 
-See [docs/SDK.md](./docs/SDK.md) for the full surface and an integration example.
+See [docs/SDK.md](./docs/SDK.md) for the full surface and an integration example,
+and [docs/MCP.md](./docs/MCP.md) for the same thing without the dependency.
 
 ## Examples
 

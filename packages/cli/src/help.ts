@@ -14,6 +14,7 @@ ${c('USAGE', ansi.bold)}
   ankou render <piece.json> [--render html|tui|json] [-o <file>]
   ankou formats
   ankou providers
+  ankou mcp                       Serve ankou to an agent over MCP (stdio).
 
   Sources are file paths, URLs, or "-" for stdin. Markdown, plain text, HTML and
   PDF are understood; a URL is fetched and stripped down to the readable part.
