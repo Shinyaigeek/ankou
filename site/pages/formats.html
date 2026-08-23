@@ -86,7 +86,7 @@
           cleverness, given time", not "Background". Each slide may carry one focal
           element: a verbatim quote, a stat, a code block, or mermaid source.
         </p>
-        <div class="code"><pre><code>ankou paper.pdf -i "brief the team" \
+        <div class="code"><pre data-lang="sh"><code>ankou paper.pdf -i "brief the team" \
   --format slides --param slideCount=12 --open</code></pre></div>
       </div>
       <div class="demo">
@@ -124,8 +124,8 @@
           against a list of accepted strings — so a right answer typed slightly
           differently still counts.
         </p>
-        <div class="code"><pre><code>ankou https://example.com/post -i "覚えたい" --play
-<span class="cm"># the terminal player grades you as you go</span></code></pre></div>
+        <div class="code"><pre data-lang="sh"><code>ankou https://example.com/post -i "覚えたい" --play
+# the terminal player grades you as you go</code></pre></div>
       </div>
       <div class="demo">
         <div class="demo-head">
@@ -195,7 +195,7 @@
           the TL;DR and key points — so the top level reflects the whole thing rather
           than whatever happened to be in the first window.
         </p>
-        <div class="code"><pre><code>ankou report.pdf -i "worth my afternoon?" \
+        <div class="code"><pre data-lang="sh"><code>ankou report.pdf -i "worth my afternoon?" \
   --format summary --param depth=brief</code></pre></div>
       </div>
       <div class="demo">
@@ -256,9 +256,9 @@
         you why in your own language. <code>--plan-only</code> shows that decision — one
         cheap model call — before anything is generated.
       </p>
-      <div class="code"><pre><code>ankou spec.md -i "レビューの前に頭に入れたい" --plan-only
-<span class="cm"># format:    summary</span>
-<span class="cm"># rationale: レビュー前の確認なので、全体の主張と論点を…</span></code></pre></div>
+      <div class="code"><pre data-lang="sh"><code>ankou spec.md -i "レビューの前に頭に入れたい" --plan-only
+# format:    summary
+# rationale: レビュー前の確認なので、全体の主張と論点を…</code></pre></div>
       <p class="muted">
         <code>ankou formats</code> prints the same list you just read, generated from the
         format registry — so it cannot drift from what is installed.

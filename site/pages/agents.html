@@ -81,15 +81,15 @@
     </div>
 
     <div>
-      <div class="code"><pre><code><span class="cm">// .mcp.json, or wherever your host keeps its servers</span>
+      <div class="code"><pre data-lang="json"><code>// .mcp.json, or wherever your host keeps its servers
 {
   "mcpServers": {
     "ankou": { "command": "npx", "args": ["-y", "ankou", "mcp"] }
   }
 }</code></pre></div>
 
-      <div class="code"><pre><code>ankou_ingest   { sources: ["./RFC.md"] }
-  → { docId: "doc-1", windows: 3 }        <span class="cm">// the map, not the body</span>
+      <div class="code"><pre data-lang="trace"><code>ankou_ingest   { sources: ["./RFC.md"] }
+  → { docId: "doc-1", windows: 3 }        // the map, not the body
 
 ankou_gaps     { docId: "doc-1" }
   → [ { kind: "citation", text: "RFC 7231", count: 4 },
@@ -170,7 +170,7 @@ ankou_render   { piece: carveId }
       </p>
       <p><a href="https://github.com/Shinyaigeek/ankou/blob/main/docs/SDK.md" rel="noreferrer">Full SDK reference →</a></p>
     </div>
-    <div class="code"><pre><code>import { carveAndRender, FORMAT_IDS } from 'ankou-core'
+    <div class="code"><pre data-lang="ts"><code>import { carveAndRender, FORMAT_IDS } from 'ankou-core'
 
 export const readTool = {
   name: 'reshape_document',
@@ -197,9 +197,9 @@ export const readTool = {
     })
     return {
       format: piece.format,
-      rationale: plan.rationale,  <span class="cm">// show the user why this shape</span>
+      rationale: plan.rationale,  // show the user why this shape
       html: output.content,
-      piece,                      <span class="cm">// keep it: re-rendering is free</span>
+      piece,                      // keep it: re-rendering is free
     }
   },
 }</code></pre></div>
@@ -220,7 +220,7 @@ export const readTool = {
         and retries through the same client as the rest of your app — one place to put your
         keys, one place to watch your spend.
       </p>
-      <div class="code"><pre><code>await carve({ sources, intent, llm: myAgentsModel })</code></pre></div>
+      <div class="code"><pre data-lang="ts"><code>await carve({ sources, intent, llm: myAgentsModel })</code></pre></div>
     </li>
     <li>
       <h3>Store the Piece, not the page</h3>
@@ -228,11 +228,11 @@ export const readTool = {
         The user asks for the deck on their phone, then the quiz in the terminal, then the
         JSON for another tool. That is three renders of one model call.
       </p>
-      <div class="code"><pre><code>const { piece } = await carve({ sources, intent })
+      <div class="code"><pre data-lang="ts"><code>const { piece } = await carve({ sources, intent })
 await db.pieces.put(id, piece)
 
-render(piece, 'html', { theme: 'dark' })   <span class="cm">// { content, ext, mime }</span>
-render(piece, 'tui', { columns: 100 })     <span class="cm">// a plain transcript</span>
+render(piece, 'html', { theme: 'dark' })   // { content, ext, mime }
+render(piece, 'tui', { columns: 100 })     // a plain transcript
 render(piece, 'json')</code></pre></div>
     </li>
     <li>
@@ -244,7 +244,7 @@ render(piece, 'json')</code></pre></div>
         true. An <code>AbortSignal</code> stops the run mid-flight, including the request
         already in the air.
       </p>
-      <div class="code"><pre><code>const controller = new AbortController()
+      <div class="code"><pre data-lang="ts"><code>const controller = new AbortController()
 
 await carve({
   sources,
@@ -262,7 +262,7 @@ await carve({
         on the code and pass the hint straight to the user instead of inventing an
         explanation.
       </p>
-      <div class="code"><pre><code>try {
+      <div class="code"><pre data-lang="ts"><code>try {
   await carve({ sources, intent })
 } catch (error) {
   if (error instanceof AnkouError) reply(`${error.message} ${error.hint ?? ''}`)
@@ -281,16 +281,16 @@ await carve({
         An agent that already runs commands does not need a dependency. The CLI writes the
         piece to stdout, takes stdin as a source, and stays quiet when asked.
       </p>
-      <div class="code"><pre><code><span class="cm"># decide first — one cheap call, nothing generated</span>
+      <div class="code"><pre data-lang="sh"><code># decide first — one cheap call, nothing generated
 ankou paper.pdf -i "$USER_ASK" --plan-only -q
 
-<span class="cm"># then generate, and keep the structure</span>
+# then generate, and keep the structure
 ankou paper.pdf -i "$USER_ASK" --render json -o - -q &gt; piece.json
 
-<span class="cm"># render it anywhere later, no model, no network</span>
+# render it anywhere later, no model, no network
 ankou render piece.json --render html -o out.html
 
-<span class="cm"># pipe a document straight in</span>
+# pipe a document straight in
 cat draft.md | ankou - -i "make it land" -f animation --open</code></pre></div>
       <p class="muted">
         <code>-q</code> silences progress so stdout is only ever the artefact. Exit codes
@@ -306,7 +306,7 @@ cat draft.md | ankou - -i "make it land" -f animation --open</code></pre></div>
         and authenticates with a Claude Code subscription, so an agent that would rather
         shell out than speak a protocol still needs nothing provisioned.
       </p>
-      <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
+      <div class="code"><pre data-lang="sh"><code>npm i @anthropic-ai/claude-agent-sdk
 ankou ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>
       <p>
         The repository also ships a Claude Code skill at

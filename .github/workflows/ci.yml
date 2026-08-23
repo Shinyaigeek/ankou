@@ -65,3 +65,7 @@ jobs:
       # The suite runs the whole pipeline against a stub model: no key, no network.
       - run: pnpm test
       - run: node examples/gallery.mjs
+      # The site build is where the code blocks get highlighted, and it throws on
+      # a block with no language — which is a thing to find out on the pull
+      # request rather than on the deploy that follows the merge.
+      - run: node site/build.mjs

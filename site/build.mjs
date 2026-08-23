@@ -7,6 +7,7 @@
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { highlight } from './highlight.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
@@ -49,6 +50,22 @@ const PAGES = [
 
 const layout = await readFile(join(here, 'layout.html'), 'utf8')
 
+// Code blocks are highlighted here rather than in the browser: the text never
+// changes, so shipping a highlighter to every reader would be paying at runtime
+// for an answer that is already known at build time.
+const CODE = /<pre data-lang="([\w-]+)"><code>([\s\S]*?)<\/code><\/pre>/g
+
+const highlightCode = (html, slug) => {
+  const out = html.replace(
+    CODE,
+    (_, lang, code) => `<pre data-lang="${lang}"><code>${highlight(code, lang)}</code></pre>`,
+  )
+  // A block with no language would render as grey text and nobody would notice
+  // for months, so an untagged one stops the build instead.
+  if (/<pre(?! data-lang=)/.test(out)) throw new Error(`${slug}.html: a <pre> has no data-lang`)
+  return out
+}
+
 const nav = (slug) =>
   NAV.map(({ href, label, external }) => {
     const current = href === `./${slug}.html`
@@ -61,7 +78,10 @@ await rm(outDir, { recursive: true, force: true })
 await mkdir(join(outDir, 'demo'), { recursive: true })
 
 for (const page of PAGES) {
-  const content = await readFile(join(here, 'pages', `${page.slug}.html`), 'utf8')
+  const content = highlightCode(
+    await readFile(join(here, 'pages', `${page.slug}.html`), 'utf8'),
+    page.slug,
+  )
   const html = layout
     .replaceAll('{{title}}', page.title)
     .replaceAll('{{description}}', page.description)

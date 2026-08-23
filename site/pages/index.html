@@ -108,32 +108,32 @@
     </div>
 
     <div>
-      <div class="code"><pre><code><span class="cm"># the CLI, globally</span>
+      <div class="code"><pre data-lang="sh"><code># the CLI, globally
 npm i -g ankou
 
-<span class="cm"># the SDK, in a project</span>
+# the SDK, in a project
 npm i ankou-core
 
-<span class="cm"># or from a checkout — also how you develop on it</span>
+# or from a checkout — also how you develop on it
 git clone https://github.com/Shinyaigeek/ankou.git
 cd ankou &amp;&amp; ./scripts/install-local.sh</code></pre></div>
 
-      <div class="code"><pre><code><span class="cm"># whichever you have — the first key found wins</span>
+      <div class="code"><pre data-lang="sh"><code># whichever you have — the first key found wins
 export ANTHROPIC_API_KEY=sk-...
-<span class="cm"># or: --provider claude-code   a Claude Code subscription, no key</span>
-<span class="cm"># or: --provider openai        OpenAI, OpenRouter, LM Studio, vLLM, Groq</span>
-<span class="cm"># or: --provider ollama        local, free, no network egress</span>
+# or: --provider claude-code   a Claude Code subscription, no key
+# or: --provider openai        OpenAI, OpenRouter, LM Studio, vLLM, Groq
+# or: --provider ollama        local, free, no network egress
 
 ankou providers</code></pre></div>
 
-      <div class="code"><pre><code>ankou spec.md -i <span class="hl">"一字一句漏らさず頭に入れたい"</span>
-<span class="cm"># → flipbook: plays the text back one character at a time, verbatim</span>
+      <div class="code"><pre data-lang="sh"><code>ankou spec.md -i <span class="hl">"一字一句漏らさず頭に入れたい"</span>
+# → flipbook: plays the text back one character at a time, verbatim
 
 ankou https://example.com/post -i <span class="hl">"I need to remember this"</span> --play
-<span class="cm"># → quiz, in your terminal</span>
+# → quiz, in your terminal
 
 ankou paper.pdf notes.md -i <span class="hl">"explain it like I have never seen it"</span>
-<span class="cm"># → dialogue: two voices working through it</span></code></pre></div>
+# → dialogue: two voices working through it</code></pre></div>
       <p class="muted">
         Sources are file paths, URLs, or <code>-</code> for stdin. Markdown, text, HTML
         and PDF are understood; a URL is fetched and stripped down to the readable part,
@@ -179,10 +179,10 @@ ankou paper.pdf notes.md -i <span class="hl">"explain it like I have never seen 
       </p>
     </div>
     <div>
-      <div class="code"><pre><code><span class="cm"># pay the model once…</span>
+      <div class="code"><pre data-lang="sh"><code># pay the model once…
 ankou paper.pdf -i "覚えたい" --render json -o piece.json
 
-<span class="cm"># …and render it as often as you like</span>
+# …and render it as often as you like
 ankou render piece.json --open
 ankou render piece.json --play</code></pre></div>
       <p class="muted">

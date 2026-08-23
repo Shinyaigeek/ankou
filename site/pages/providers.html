@@ -53,7 +53,7 @@
         want of a model.
       </p>
     </div>
-    <div class="code"><pre><code>$ ankou providers
+    <div class="code"><pre data-lang="console"><code>$ ankou providers
 
   ✓ anthropic    claude-sonnet-5
       ANTHROPIC_API_KEY
@@ -97,10 +97,10 @@
     <div class="card">
       <p class="card-glyph">anthropic</p>
       <h3>An API key</h3>
-      <div class="code"><pre><code>export ANTHROPIC_API_KEY=sk-ant-...
+      <div class="code"><pre data-lang="sh"><code>export ANTHROPIC_API_KEY=sk-ant-...
 ankou spec.md -i "覚えたい"
 
-<span class="cm"># a different model, or a gateway</span>
+# a different model, or a gateway
 ankou spec.md -i "…" -m claude-opus-4-5
 export ANTHROPIC_BASE_URL=https://my-gateway</code></pre></div>
       <p class="muted">
@@ -113,7 +113,7 @@ export ANTHROPIC_BASE_URL=https://my-gateway</code></pre></div>
     <div class="card">
       <p class="card-glyph">claude-code</p>
       <h3>A subscription, no key</h3>
-      <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
+      <div class="code"><pre data-lang="sh"><code>npm i @anthropic-ai/claude-agent-sdk
 ankou spec.md -i "覚えたい" --provider claude-code</code></pre></div>
       <p class="muted">
         Generation runs through the Claude Agent SDK, which authenticates with your Claude
@@ -126,16 +126,16 @@ ankou spec.md -i "覚えたい" --provider claude-code</code></pre></div>
     <div class="card">
       <p class="card-glyph">openai-compatible</p>
       <h3>One endpoint, many vendors</h3>
-      <div class="code"><pre><code><span class="cm"># OpenAI</span>
+      <div class="code"><pre data-lang="sh"><code># OpenAI
 export OPENAI_API_KEY=sk-...
 ankou post.md -i "…" -p openai
 
-<span class="cm"># OpenRouter / Groq / Together: same shape</span>
+# OpenRouter / Groq / Together: same shape
 ankou post.md -i "…" -p openai \
   --base-url https://openrouter.ai/api/v1 \
   -m anthropic/claude-sonnet-4.5
 
-<span class="cm"># LM Studio or vLLM on the desk next to you</span>
+# LM Studio or vLLM on the desk next to you
 ankou post.md -i "…" -p openai \
   --base-url http://localhost:1234/v1 -m local-model</code></pre></div>
       <p class="muted">
@@ -148,11 +148,11 @@ ankou post.md -i "…" -p openai \
     <div class="card">
       <p class="card-glyph">ollama</p>
       <h3>Nothing leaves the machine</h3>
-      <div class="code"><pre><code>ollama serve
+      <div class="code"><pre data-lang="sh"><code>ollama serve
 ollama pull qwen3:8b
 ankou paper.pdf -i "…" -p ollama
 
-<span class="cm"># smaller model? give it smaller windows</span>
+# smaller model? give it smaller windows
 ankou paper.pdf -i "…" -p ollama \
   -m llama3.1:8b --window 8000</code></pre></div>
       <p class="muted">
@@ -176,7 +176,7 @@ ankou paper.pdf -i "…" -p ollama \
         — and a broken one warns rather than stops, but does not sit there being silently
         ignored. A key you mistyped gets the nearest real one suggested back.
       </p>
-      <div class="code"><pre><code>{
+      <div class="code"><pre data-lang="json"><code>{
   "provider": "ollama",
   "model": "qwen3:8b",
   "renderer": "html",
@@ -200,7 +200,7 @@ ankou paper.pdf -i "…" -p ollama \
         prompts for JSON, validates against the schema, and retries once with the
         validator's own errors — which is enough for most models.
       </p>
-      <div class="code"><pre><code><span class="cm">import type { LLM } from 'ankou-core'</span>
+      <div class="code"><pre data-lang="ts"><code>import type { LLM } from 'ankou-core'
 
 const myModel: LLM = {
   name: 'my-gateway:some-model',

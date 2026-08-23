@@ -19,6 +19,19 @@
   --font-serif: ui-serif, Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --measure: 34rem;
+
+  /* Syntax highlighting. Low-chroma on purpose: a code block should read as
+     part of the page, not as a screenshot of somebody else's editor. */
+  --tok-comment: #a19b8b;
+  --tok-cmd: #1b1a17;
+  --tok-keyword: #a03d6e;
+  --tok-string: #4f7a34;
+  --tok-number: #96601a;
+  --tok-type: #2f6f8f;
+  --tok-key: #8a6112;
+  --tok-var: #b45309;
+  --tok-flag: #a03d6e;
+  --tok-op: #857f70;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +47,17 @@
     --border: #302d25;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 32px rgba(0, 0, 0, .35);
     --shadow-lift: 0 2px 6px rgba(0, 0, 0, .5), 0 20px 50px rgba(0, 0, 0, .45);
+
+    --tok-comment: #706b5c;
+    --tok-cmd: #f2efe6;
+    --tok-keyword: #e7a2c6;
+    --tok-string: #a9cd8e;
+    --tok-number: #e8b473;
+    --tok-type: #92c6de;
+    --tok-key: #e2c68b;
+    --tok-var: #f0a868;
+    --tok-flag: #e7a2c6;
+    --tok-op: #9c9686;
   }
 }
 
@@ -49,6 +73,16 @@
   --border: #302d25;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 32px rgba(0, 0, 0, .35);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, .5), 0 20px 50px rgba(0, 0, 0, .45);
+  --tok-comment: #706b5c;
+  --tok-cmd: #f2efe6;
+  --tok-keyword: #e7a2c6;
+  --tok-string: #a9cd8e;
+  --tok-number: #e8b473;
+  --tok-type: #92c6de;
+  --tok-key: #e2c68b;
+  --tok-var: #f0a868;
+  --tok-flag: #e7a2c6;
+  --tok-op: #9c9686;
 }
 
 * { box-sizing: border-box; }
@@ -203,8 +237,20 @@ pre code { background: none; padding: 0; font-size: inherit; }
 }
 .code:hover .copy, .code .copy:focus-visible { opacity: 1; }
 .code .copy:hover { color: var(--accent); border-color: var(--accent); }
-.cm { color: var(--fg-faint); }
 .hl { color: var(--accent); }
+
+/* Tokens, written into the markup by site/highlight.mjs at build time. */
+.t-comment { color: var(--tok-comment); font-style: italic; }
+.t-cmd { color: var(--tok-cmd); font-weight: 600; }
+.t-keyword { color: var(--tok-keyword); }
+.t-string { color: var(--tok-string); }
+.t-number, .t-literal { color: var(--tok-number); }
+.t-type, .t-fn { color: var(--tok-type); }
+.t-key { color: var(--tok-key); }
+.t-var { color: var(--tok-var); }
+.t-flag { color: var(--tok-flag); }
+.t-op { color: var(--tok-op); }
+.t-ok { color: var(--tok-string); }
 kbd {
   border: 1px solid var(--border); border-bottom-width: 2px; background: var(--bg-raised);
   border-radius: 6px; padding: .05em .38em; font-size: .82em; color: var(--fg-muted);
