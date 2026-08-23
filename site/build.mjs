@@ -91,8 +91,9 @@ for (const page of PAGES) {
   await writeFile(join(outDir, `${page.slug}.html`), html)
 }
 
-await copyFile(join(here, 'styles.css'), join(outDir, 'styles.css'))
-await copyFile(join(here, 'site.js'), join(outDir, 'site.js'))
+for (const asset of ['styles.css', 'site.js', 'icon.svg', 'apple-touch-icon.png']) {
+  await copyFile(join(here, asset), join(outDir, asset))
+}
 
 // The demos are the gallery's own output, unedited. If they are missing the
 // site would still build and quietly serve six dead iframes, so it stops here
