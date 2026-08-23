@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { chew, FORMAT_IDS, render } from '../packages/core/dist/index.js'
+import { carve, FORMAT_IDS, render } from '../packages/core/dist/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const outDir = join(here, 'out')
@@ -25,7 +25,7 @@ We should build in only the meta-methods that can find and capture arbitrary
 complexity. We want AI agents that can discover like we can, not which contain
 what we have discovered.`
 
-// A stub that answers each schema kamu asks for. A real provider is the same
+// A stub that answers each schema ankou asks for. A real provider is the same
 // interface with a network call behind it.
 const ANSWERS = {
   reading_plan: { format: 'summary', rationale: 'Example.', params: {} },
@@ -218,7 +218,7 @@ const stub = {
 
 await mkdir(outDir, { recursive: true })
 for (const format of FORMAT_IDS) {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE, name: 'bitter-lesson.md' }],
     intent: 'Show me what this format looks like.',
     format,

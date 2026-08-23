@@ -9,7 +9,7 @@ export interface TuiTextOptions {
 /**
  * The non-interactive form of the terminal renderer: a transcript.
  *
- * `kamu ... --render tui` in a pipe or a CI log has nothing to interact with,
+ * `ankou ... --render tui` in a pipe or a CI log has nothing to interact with,
  * so it gets this instead of an empty screen.
  */
 export function renderTuiText(piece: Piece, options: TuiTextOptions = {}): string {
@@ -132,6 +132,6 @@ export function renderTuiText(piece: Piece, options: TuiTextOptions = {}): strin
     }
   }
 
-  out.push('', c(centre('chewed by kamu', columns), palette.faint))
+  out.push('', c(centre('carved by ankou', columns), palette.faint))
   return `${out.join('\n')}\n`
 }

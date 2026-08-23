@@ -1,10 +1,4 @@
-import {
-  FORMAT_IDS,
-  FORMATS,
-  PROVIDERS,
-  type ProviderStatus,
-  RENDERERS,
-} from '@shinyaigeek/kamu-core'
+import { FORMAT_IDS, FORMATS, PROVIDERS, type ProviderStatus, RENDERERS } from 'ankou-core'
 import { style } from './ui.js'
 
 const { ansi, palette } = style
@@ -13,29 +7,29 @@ export function helpText(colour: boolean): string {
   const c = (text: string, ...codes: string[]) =>
     colour ? `${codes.join('')}${text}${ansi.reset}` : text
 
-  return `${c('kamu', ansi.bold)} — chew documents into the shape you actually want to read them in
+  return `${c('ankou', ansi.bold)} — carve documents into the shape you actually want to read them in
 
 ${c('USAGE', ansi.bold)}
-  kamu <source...> --intent "<what you want out of it>" [options]
-  kamu render <piece.json> [--render html|tui|json] [-o <file>]
-  kamu formats
-  kamu providers
+  ankou <source...> --intent "<what you want out of it>" [options]
+  ankou render <piece.json> [--render html|tui|json] [-o <file>]
+  ankou formats
+  ankou providers
 
   Sources are file paths, URLs, or "-" for stdin. Markdown, plain text, HTML and
   PDF are understood; a URL is fetched and stripped down to the readable part.
 
 ${c('EXAMPLES', ansi.bold)}
-  kamu spec.md -i "一字一句漏らさず頭に入れたい"
-  kamu https://example.com/post -i "覚えたい" --render tui
-  kamu paper.pdf notes.md -i "explain it to me like I have never seen it"
-  cat draft.txt | kamu - -i "make it land" --format animation --open
-  kamu post.md -i "覚えたい" --render json -o piece.json && kamu render piece.json --open
+  ankou spec.md -i "一字一句漏らさず頭に入れたい"
+  ankou https://example.com/post -i "覚えたい" --render tui
+  ankou paper.pdf notes.md -i "explain it to me like I have never seen it"
+  cat draft.txt | ankou - -i "make it land" --format animation --open
+  ankou post.md -i "覚えたい" --render json -o piece.json && ankou render piece.json --open
 
 ${c('OPTIONS', ansi.bold)}
   -i, --intent <text>     What you want out of the source. This is the brief.
   -f, --format <id>       Skip the planner and use this format.
   -r, --render <id>       ${RENDERERS.join(' | ')}  (default: html)
-                          json writes the piece; "kamu render" reads it back.
+                          json writes the piece; "ankou render" reads it back.
   -o, --out <file>        Where to write. Default: a file next to your cwd.
       --open              Open the result when it is written.
       --play              Shorthand for --render tui.
@@ -44,7 +38,7 @@ ${c('OPTIONS', ansi.bold)}
       --base-url <url>    Override the provider endpoint.
       --theme <mode>      dark | light | auto  (default: auto)
       --lang <tag>        Force the output language, e.g. ja, en.
-      --param k=v         Format knob; repeatable. See \`kamu formats\`.
+      --param k=v         Format knob; repeatable. See \`ankou formats\`.
       --window <chars>    Source characters per model call (default: 24000).
       --timeout <ms>      URL fetch timeout (default: 30000).
       --encoding <name>   Character encoding for sources that declare none.
@@ -63,9 +57,9 @@ ${c('CREDENTIALS', ansi.bold)}
   --provider claude-code uses a Claude Code subscription, no key needed
   --provider ollama runs locally against OLLAMA_HOST
 
-  \`kamu providers\` shows which of these are ready right now.
+  \`ankou providers\` shows which of these are ready right now.
 
-  Config file: ~/.config/kamu/config.json — { "provider": "...", "model": "..." }
+  Config file: ~/.config/ankou/config.json — { "provider": "...", "model": "..." }
 `
 }
 
@@ -93,7 +87,7 @@ ${
 }
 
 /**
- * What each provider needs and whether it has it. Printed by `kamu providers`,
+ * What each provider needs and whether it has it. Printed by `ankou providers`,
  * which is where someone lands when the run failed for want of a model.
  */
 export function providersText(statuses: ProviderStatus[], colour: boolean): string {
@@ -110,7 +104,7 @@ export function providersText(statuses: ProviderStatus[], colour: boolean): stri
 
   const ready = statuses.filter((status) => status.ready)
   const footer = ready.length
-    ? `Try: ${c(`kamu <source> -i "…" --provider ${ready[0]!.id}`, palette.accent)}`
+    ? `Try: ${c(`ankou <source> -i "…" --provider ${ready[0]!.id}`, palette.accent)}`
     : 'Nothing is configured yet. The quickest route with no API key is `ollama serve`.'
 
   return `${lines.join('\n')}\n\n  ${footer}\n`

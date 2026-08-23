@@ -35,7 +35,7 @@ export function isFormatId(value: string): value is FormatId {
  *
  * Measured rather than guessed: each field here is one whose absence makes at
  * least one renderer throw. The type declares them all as required, so a piece
- * missing any of them was not written by a version of kamu — it was truncated,
+ * missing any of them was not written by a version of ankou — it was truncated,
  * hand-edited, or produced by something else.
  */
 const REQUIRED: Record<FormatId, string[]> = {
@@ -48,10 +48,10 @@ const REQUIRED: Record<FormatId, string[]> = {
 }
 
 /**
- * What stops this from being a piece kamu can render, if anything.
+ * What stops this from being a piece ankou can render, if anything.
  *
  * A `Piece` is meant to outlive the run that made it — cached, stored, handed to
- * another program, read back by `kamu render` — so something has to check what
+ * another program, read back by `ankou render` — so something has to check what
  * comes back. Checking only the discriminant was not enough: every renderer
  * reads `meta.sources` and its own format's collections, so a piece carrying
  * neither reached them and threw a bare TypeError at the reader instead of an
@@ -78,7 +78,7 @@ export function pieceProblems(value: unknown): string[] {
   return missing
 }
 
-/** Is this a piece kamu can render? See `pieceProblems` for what that means. */
+/** Is this a piece ankou can render? See `pieceProblems` for what that means. */
 export function isPiece(value: unknown): value is Piece {
   return pieceProblems(value).length === 0
 }

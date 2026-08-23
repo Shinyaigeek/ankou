@@ -161,8 +161,8 @@ test('the quiz grades what you actually answered', async () => {
       {
         id: 'q2',
         kind: 'short',
-        prompt: 'Type kamu',
-        answer: ['kamu'],
+        prompt: 'Type ankou',
+        answer: ['ankou'],
         explanation: 'yes',
         difficulty: 1,
       },
@@ -175,7 +175,7 @@ test('the quiz grades what you actually answered', async () => {
   await settle()
   screen.press(KEY.enter)
   await settle()
-  screen.press('k', 'a', 'm', 'u', KEY.enter)
+  screen.press('a', 'n', 'k', 'o', 'u', KEY.enter)
   await settle()
   screen.press(KEY.enter)
   await settle()
@@ -209,15 +209,15 @@ test('a session leaves the process as it found it', async () => {
 
 test('an empty emphasis term does not hang the player', () => {
   // `indexOf('')` answers `from` forever. A piece can arrive from anywhere —
-  // `kamu render piece.json --play` reads one off disk — so this has to be a
+  // `ankou render piece.json --play` reads one off disk — so this has to be a
   // failure, not a spin. Run it out of process: a hang is not a test result.
   const script = `
     const { PassThrough, Writable } = require('node:stream')
-    import('${new URL('../dist/index.js', import.meta.url).href}').then(async (kamu) => {
+    import('${new URL('../dist/index.js', import.meta.url).href}').then(async (ankou) => {
       const input = new PassThrough(); input.isTTY = false
       const output = new Writable({ write(c, e, d) { d() } })
       output.columns = 80; output.rows = 24
-      const done = kamu.playTui({
+      const done = ankou.playTui({
         format: 'flipbook', title: 't', lang: 'en',
         meta: { sources: [], intent: '', generatedAt: '', model: '' },
         chapters: [{ title: 'c', text: 'hello world' }],

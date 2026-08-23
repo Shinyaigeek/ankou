@@ -3,7 +3,7 @@ import type { JsonSchema } from '../llm/types.js'
 /**
  * A deliberately small JSON Schema validator.
  *
- * kamu authors every schema it validates against, so this covers exactly the
+ * ankou authors every schema it validates against, so this covers exactly the
  * keywords those schemas use. Its job is to catch a model that drifted from the
  * shape and to describe the drift well enough that the model can fix it, not to
  * be a general-purpose validator.

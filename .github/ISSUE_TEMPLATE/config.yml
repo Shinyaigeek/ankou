@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/Shinyaigeek/kamu/security/advisories/new
+    url: https://github.com/Shinyaigeek/ankou/security/advisories/new
     about: Please report privately, never as a public issue. See SECURITY.md.
   - name: Contributing guide
-    url: https://github.com/Shinyaigeek/kamu/blob/main/CONTRIBUTING.md
+    url: https://github.com/Shinyaigeek/ankou/blob/main/CONTRIBUTING.md
     about: Setup, the checks CI runs, and how to add a format.

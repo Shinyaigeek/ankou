@@ -30,7 +30,7 @@ interface ResultMessage {
  * limit is low: we want a completion, not an agent loop.
  */
 export function claudeCode(options: ProviderOptions = {}): LLM {
-  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const model = options.model ?? process.env.ANKOU_MODEL ?? DEFAULT_MODEL
 
   const load = async (): Promise<ClaudeAgentSdk> => {
     if (options.sdk) return options.sdk

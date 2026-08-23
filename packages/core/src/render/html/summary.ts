@@ -68,7 +68,7 @@ export function renderSummaryHtml(piece: SummaryPiece, theme: 'dark' | 'light' |
     body: `
 <main class="sm-wrap">
   <h1>${escapeHtml(piece.title)}</h1>
-  <p class="sm-source">${sources} · ${piece.meta.charCount.toLocaleString('en-US')} characters chewed</p>
+  <p class="sm-source">${sources} · ${piece.meta.charCount.toLocaleString('en-US')} characters carved</p>
 
   ${piece.tldr ? `<div class="sm-tldr"><h2>TL;DR</h2>${escapeHtml(piece.tldr)}</div>` : ''}
 

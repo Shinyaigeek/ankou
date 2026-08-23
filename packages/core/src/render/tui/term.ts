@@ -14,7 +14,7 @@ export const ansi = {
   bg: (code: number) => `${CSI}48;5;${code}m`,
 }
 
-/** kamu's terminal palette, in 256-colour codes so it survives ssh and tmux. */
+/** ankou's terminal palette, in 256-colour codes so it survives ssh and tmux. */
 export const palette = {
   accent: ansi.fg(208),
   accentDim: ansi.fg(130),

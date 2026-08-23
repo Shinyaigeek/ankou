@@ -1,5 +1,5 @@
 #!/bin/sh
-# Launcher for a from-source checkout, so `kamu` can live on PATH as a symlink
+# Launcher for a from-source checkout, so `ankou` can live on PATH as a symlink
 # into this repo: the symlink is followed back here to find the built CLI.
 set -e
 
@@ -14,7 +14,7 @@ done
 root=$(CDPATH= cd -- "$(dirname "$self")/.." && pwd)
 
 if [ ! -f "$root/packages/cli/dist/cli.js" ]; then
-  echo "kamu: nothing built yet in $root" >&2
+  echo "ankou: nothing built yet in $root" >&2
   echo "      run: pnpm install && pnpm build" >&2
   exit 1
 fi

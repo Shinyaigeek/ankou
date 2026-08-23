@@ -4,12 +4,10 @@ Two packages, one version, one tag:
 
 | package | npm |
 | --- | --- |
-| `packages/core` | [`@shinyaigeek/kamu-core`](https://www.npmjs.com/package/@shinyaigeek/kamu-core) |
-| `packages/cli` | [`@shinyaigeek/kamu`](https://www.npmjs.com/package/@shinyaigeek/kamu) |
+| `packages/core` | [`ankou-core`](https://www.npmjs.com/package/ankou-core) |
+| `packages/cli` | [`ankou`](https://www.npmjs.com/package/ankou) |
 
 The CLI depends on core, so they go out together and share a version number.
-(The unscoped `kamu` on npm is an unrelated package, which is why both are
-scoped. The command is still `kamu`.)
 
 ## Cutting a release
 
@@ -66,10 +64,10 @@ Then tag as above. If you would rather claim the names by hand first:
 
 ```sh
 pnpm install --frozen-lockfile && pnpm build && pnpm test
-( cd packages/core && pnpm pack --pack-destination /tmp/kamu )
-( cd packages/cli  && pnpm pack --pack-destination /tmp/kamu )
-npm publish /tmp/kamu/shinyaigeek-kamu-core-0.1.0.tgz --access public
-npm publish /tmp/kamu/shinyaigeek-kamu-0.1.0.tgz --access public
+( cd packages/core && pnpm pack --pack-destination /tmp/ankou )
+( cd packages/cli  && pnpm pack --pack-destination /tmp/ankou )
+npm publish /tmp/ankou/ankou-core-0.1.0.tgz --access public
+npm publish /tmp/ankou/ankou-0.1.0.tgz --access public
 ```
 
 `pnpm pack` rather than `npm publish` from the package directory: only pnpm
@@ -84,9 +82,9 @@ bumping, or open the release by hand for that one version.
 
 ## After publishing
 
-- `npm view @shinyaigeek/kamu` and `npm view @shinyaigeek/kamu-core` — check the
+- `npm view ankou` and `npm view ankou-core` — check the
   version, the `bin`, and that the dependency on core resolved to a real range.
-- Install it somewhere clean: `npm i -g @shinyaigeek/kamu && kamu --version`.
+- Install it somewhere clean: `npm i -g ankou && ankou --version`.
 - A published version cannot be replaced. If something is wrong, publish the
   fix as the next patch; only reach for `npm deprecate` (not unpublish) when a
   version is actively harmful.

@@ -1,5 +1,5 @@
 /**
- * Core domain types for kamu.
+ * Core domain types for ankou.
  *
  * The pipeline is: Source -> Document -> Plan -> Piece -> rendered output.
  *
@@ -82,7 +82,7 @@ export interface PieceBase {
 
 export interface FlipbookChapter {
   title: string
-  /** Verbatim slice of the source text. kamu never paraphrases here. */
+  /** Verbatim slice of the source text. ankou never paraphrases here. */
   text: string
 }
 

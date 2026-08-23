@@ -1,5 +1,5 @@
 {
-  "name": "kamu-monorepo",
+  "name": "ankou-monorepo",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.9.0",
@@ -9,13 +9,13 @@
     "test": "pnpm -r --filter './packages/*' test",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "kamu": "node packages/cli/dist/cli.js",
+    "ankou": "node packages/cli/dist/cli.js",
     "gallery": "node examples/gallery.mjs",
     "site": "node examples/gallery.mjs && node site/build.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
-    "@shinyaigeek/kamu-core": "workspace:*",
+    "ankou-core": "workspace:*",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
   },

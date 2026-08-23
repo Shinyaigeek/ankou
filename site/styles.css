@@ -1,4 +1,4 @@
-/* The palette is the one kamu's HTML renderer ships with, so the demos
+/* The palette is the one ankou's HTML renderer ships with, so the demos
    embedded on these pages sit inside a site that looks like their own. */
 :root {
   color-scheme: light dark;

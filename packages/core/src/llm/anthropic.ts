@@ -15,11 +15,11 @@ interface AnthropicContent {
 
 /**
  * Direct Messages API client over `fetch`. Deliberately not the vendor SDK:
- * kamu-core stays dependency-free so it drops into any Node 22 project.
+ * ankou-core stays dependency-free so it drops into any Node 22 project.
  */
 export function anthropic(options: ProviderOptions = {}): LLM {
   const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY
-  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const model = options.model ?? process.env.ANKOU_MODEL ?? DEFAULT_MODEL
   const baseUrl = (options.baseUrl ?? process.env.ANTHROPIC_BASE_URL ?? DEFAULT_BASE).replace(
     /\/$/,
     '',

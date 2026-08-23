@@ -5,16 +5,16 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { loadConfig } from '../dist/config.js'
 
-/** Point kamu's config path at a fresh directory and put `contents` there. */
+/** Point ankou's config path at a fresh directory and put `contents` there. */
 async function withConfig<T>(contents: string | null, run: () => Promise<T>): Promise<T> {
-  const home = await mkdtemp(join(tmpdir(), 'kamu-config-'))
+  const home = await mkdtemp(join(tmpdir(), 'ankou-config-'))
   const saved = process.env.XDG_CONFIG_HOME
   process.env.XDG_CONFIG_HOME = home
   try {
     if (contents !== null) {
       const { mkdir } = await import('node:fs/promises')
-      await mkdir(join(home, 'kamu'), { recursive: true })
-      await writeFile(join(home, 'kamu', 'config.json'), contents)
+      await mkdir(join(home, 'ankou'), { recursive: true })
+      await writeFile(join(home, 'ankou', 'config.json'), contents)
     }
     return await run()
   } finally {

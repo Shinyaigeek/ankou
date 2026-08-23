@@ -120,7 +120,7 @@ export async function plan(
   }>(llm, {
     name: 'reading_plan',
     schema: PLAN_SCHEMA,
-    system: `You are kamu's planner. A reader hands you a document and says what they want out of it; you choose the shape it should be delivered in.
+    system: `You are ankou's planner. A reader hands you a document and says what they want out of it; you choose the shape it should be delivered in.
 
 Choose by what the reader will *do* with it, not by what the document is. "I want to take this in properly" is a flipbook; "I need to remember this" is a quiz; "what does this even say" is a summary.
 

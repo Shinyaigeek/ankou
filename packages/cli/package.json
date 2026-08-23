@@ -1,10 +1,10 @@
 {
-  "name": "@shinyaigeek/kamu",
+  "name": "ankou",
   "version": "0.1.0",
   "description": "Feed it markdown, text, HTML, PDFs or URLs, say what you want out of them, and read the result as a flipbook, deck, quiz, animation or summary.",
   "type": "module",
   "bin": {
-    "kamu": "./dist/cli.js"
+    "ankou": "./dist/cli.js"
   },
   "main": "./dist/cli.js",
   "files": [
@@ -31,20 +31,20 @@
   ],
   "author": "Shinyaigeek",
   "license": "MIT",
-  "homepage": "https://github.com/Shinyaigeek/kamu#readme",
+  "homepage": "https://github.com/Shinyaigeek/ankou#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shinyaigeek/kamu.git",
+    "url": "git+https://github.com/Shinyaigeek/ankou.git",
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/Shinyaigeek/kamu/issues"
+    "url": "https://github.com/Shinyaigeek/ankou/issues"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
-    "@shinyaigeek/kamu-core": "workspace:*"
+    "ankou-core": "workspace:*"
   },
   "peerDependencies": {
     "@anthropic-ai/claude-agent-sdk": ">=0.1.0",

@@ -91,15 +91,15 @@ jobs:
           set -eu
           # core first: the CLI depends on the version being on the registry.
           for tarball in \
-            "$OUT/shinyaigeek-kamu-core-$VERSION.tgz" \
-            "$OUT/shinyaigeek-kamu-$VERSION.tgz"; do
+            "$OUT/ankou-core-$VERSION.tgz" \
+            "$OUT/ankou-$VERSION.tgz"; do
             npm publish "$tarball" --access public --provenance $DRY
           done
 
       - name: Keep the tarballs with the run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: kamu-${{ steps.version.outputs.version }}-tarballs
+          name: ankou-${{ steps.version.outputs.version }}-tarballs
           path: ${{ steps.pack.outputs.dir }}/*.tgz
           retention-days: 14
 
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: kamu-${{ needs.publish.outputs.version }}-tarballs
+          name: ankou-${{ needs.publish.outputs.version }}-tarballs
           path: tarballs
       - name: Open the release, with this version's changelog as the notes
         env:

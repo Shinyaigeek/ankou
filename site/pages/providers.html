@@ -3,7 +3,7 @@
     <p class="eyebrow">Models</p>
     <h1>Bring the model you already have</h1>
     <p class="lede">
-      kamu ships no model and no vendor SDK. Every built-in provider is a
+      ankou ships no model and no vendor SDK. Every built-in provider is a
       <code>fetch</code> call to an endpoint you control — four of them out of the box,
       and a two-method interface if yours is not one of the four.
     </p>
@@ -45,7 +45,7 @@
 
   <div class="split">
     <div>
-      <h3>Start with <code>kamu providers</code></h3>
+      <h3>Start with <code>ankou providers</code></h3>
       <p class="muted">
         It reports what each provider needs and whether it has it — probing the Ollama
         daemon rather than assuming it, because "installed but not running" is the case
@@ -53,7 +53,7 @@
         want of a model.
       </p>
     </div>
-    <div class="code"><pre><code>$ kamu providers
+    <div class="code"><pre><code>$ ankou providers
 
   ✓ anthropic    claude-sonnet-5
       ANTHROPIC_API_KEY
@@ -64,12 +64,12 @@
   · claude-code  claude-sonnet-5
       run `npm i @anthropic-ai/claude-agent-sdk`
 
-  Try: kamu &lt;source&gt; -i "…" --provider anthropic</code></pre></div>
+  Try: ankou &lt;source&gt; -i "…" --provider anthropic</code></pre></div>
   </div>
 
   <div class="callout">
     <p>
-      <strong>Picked without being told:</strong> <code>KAMU_PROVIDER</code> first, then
+      <strong>Picked without being told:</strong> <code>ANKOU_PROVIDER</code> first, then
       whichever API key is present — Anthropic, then OpenAI — then <code>OLLAMA_HOST</code>
       if you pointed it somewhere. A daemon on the default port stays opt-in, because
       guessing would mean a blocking probe on every run. If nothing is found, the error
@@ -89,14 +89,14 @@
       <p class="card-glyph">anthropic</p>
       <h3>An API key</h3>
       <div class="code"><pre><code>export ANTHROPIC_API_KEY=sk-ant-...
-kamu spec.md -i "覚えたい"
+ankou spec.md -i "覚えたい"
 
 <span class="cm"># a different model, or a gateway</span>
-kamu spec.md -i "…" -m claude-opus-4-5
+ankou spec.md -i "…" -m claude-opus-4-5
 export ANTHROPIC_BASE_URL=https://my-gateway</code></pre></div>
       <p class="muted">
         Talks to the Messages API directly over <code>fetch</code> — deliberately not the
-        vendor SDK, so <code>kamu-core</code> stays dependency-free and drops into any
+        vendor SDK, so <code>ankou-core</code> stays dependency-free and drops into any
         Node 22 project. Schemas go through native tool use.
       </p>
     </div>
@@ -105,12 +105,12 @@ export ANTHROPIC_BASE_URL=https://my-gateway</code></pre></div>
       <p class="card-glyph">claude-code</p>
       <h3>A subscription, no key</h3>
       <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
-kamu spec.md -i "覚えたい" --provider claude-code</code></pre></div>
+ankou spec.md -i "覚えたい" --provider claude-code</code></pre></div>
       <p class="muted">
         Generation runs through the Claude Agent SDK, which authenticates with your Claude
         Code subscription. The SDK is an optional peer, imported lazily, so anyone who only
         uses API providers never pays for it. Tools are disabled and the turn limit is low —
-        kamu wants a completion, not an agent loop.
+        ankou wants a completion, not an agent loop.
       </p>
     </div>
 
@@ -119,18 +119,18 @@ kamu spec.md -i "覚えたい" --provider claude-code</code></pre></div>
       <h3>One endpoint, many vendors</h3>
       <div class="code"><pre><code><span class="cm"># OpenAI</span>
 export OPENAI_API_KEY=sk-...
-kamu post.md -i "…" -p openai
+ankou post.md -i "…" -p openai
 
 <span class="cm"># OpenRouter / Groq / Together: same shape</span>
-kamu post.md -i "…" -p openai \
+ankou post.md -i "…" -p openai \
   --base-url https://openrouter.ai/api/v1 \
   -m anthropic/claude-sonnet-4.5
 
 <span class="cm"># LM Studio or vLLM on the desk next to you</span>
-kamu post.md -i "…" -p openai \
+ankou post.md -i "…" -p openai \
   --base-url http://localhost:1234/v1 -m local-model</code></pre></div>
       <p class="muted">
-        Local servers accept any key, so kamu only insists on one when the base URL is
+        Local servers accept any key, so ankou only insists on one when the base URL is
         still <code>api.openai.com</code>. Structured output uses the provider's JSON
         schema mode where it is offered.
       </p>
@@ -141,10 +141,10 @@ kamu post.md -i "…" -p openai \
       <h3>Nothing leaves the machine</h3>
       <div class="code"><pre><code>ollama serve
 ollama pull qwen3:8b
-kamu paper.pdf -i "…" -p ollama
+ankou paper.pdf -i "…" -p ollama
 
 <span class="cm"># smaller model? give it smaller windows</span>
-kamu paper.pdf -i "…" -p ollama \
+ankou paper.pdf -i "…" -p ollama \
   -m llama3.1:8b --window 8000</code></pre></div>
       <p class="muted">
         No key, no cost, no network egress. A daemon that answers but rejects a request is
@@ -163,7 +163,7 @@ kamu paper.pdf -i "…" -p ollama \
       <h2>Flags beat environment beats file</h2>
       <p>
         A config file is a convenience and never a surprise. It lives at
-        <code>~/.config/kamu/config.json</code> — <code>XDG_CONFIG_HOME</code> is honoured
+        <code>~/.config/ankou/config.json</code> — <code>XDG_CONFIG_HOME</code> is honoured
         — and a broken one warns rather than stops, but does not sit there being silently
         ignored. A key you mistyped gets the nearest real one suggested back.
       </p>
@@ -177,7 +177,7 @@ kamu paper.pdf -i "…" -p ollama \
   "windowChars": 12000
 }</code></pre></div>
       <p class="muted">
-        <code>KAMU_PROVIDER</code> and <code>KAMU_MODEL</code> cover the environment layer;
+        <code>ANKOU_PROVIDER</code> and <code>ANKOU_MODEL</code> cover the environment layer;
         <code>-p</code>, <code>-m</code> and <code>--base-url</code> cover the flags.
       </p>
     </div>
@@ -187,11 +187,11 @@ kamu paper.pdf -i "…" -p ollama \
       <h2>Any model with a <code>complete</code></h2>
       <p>
         If your model is behind a gateway, a queue, or a company proxy, implement the
-        interface and pass it in. <code>structured</code> is optional: omit it and kamu
+        interface and pass it in. <code>structured</code> is optional: omit it and ankou
         prompts for JSON, validates against the schema, and retries once with the
         validator's own errors — which is enough for most models.
       </p>
-      <div class="code"><pre><code><span class="cm">import type { LLM } from '@shinyaigeek/kamu-core'</span>
+      <div class="code"><pre><code><span class="cm">import type { LLM } from 'ankou-core'</span>
 
 const myModel: LLM = {
   name: 'my-gateway:some-model',
@@ -200,21 +200,21 @@ const myModel: LLM = {
   },
 }
 
-await chew({ sources, intent, llm: myModel })</code></pre></div>
+await carve({ sources, intent, llm: myModel })</code></pre></div>
       <p class="muted">
         The built-in providers are exported too, if you would rather configure one and
         reuse it: <code>anthropic()</code>, <code>openai()</code>, <code>ollama()</code>,
         <code>claudeCode()</code>.
       </p>
-      <p><a href="./agents.html">This is also how you make kamu bill through your agent's model →</a></p>
+      <p><a href="./agents.html">This is also how you make ankou bill through your agent's model →</a></p>
     </div>
   </div>
 
   <div class="callout">
     <p>
-      <strong>Structured output, whatever the provider.</strong> Every generation in kamu
+      <strong>Structured output, whatever the provider.</strong> Every generation in ankou
       fills a JSON Schema. Where the provider supports tool use or a native schema mode,
-      kamu uses it; where it does not, the output is parsed, validated in-tree, and handed
+      ankou uses it; where it does not, the output is parsed, validated in-tree, and handed
       back once with the errors it made. The format decides the schema — the provider only
       decides how it gets filled.
     </p>

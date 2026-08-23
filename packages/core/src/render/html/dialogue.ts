@@ -97,7 +97,7 @@ export function renderDialogueHtml(piece: DialoguePiece, theme: 'dark' | 'light'
   </div>`
     })
     .join('\n  ')}
-  <div class="dg-more kamu-no-print"><button type="button">Continue — <kbd>space</kbd></button></div>
+  <div class="dg-more ankou-no-print"><button type="button">Continue — <kbd>space</kbd></button></div>
 </main>
 `,
   }

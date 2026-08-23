@@ -1,9 +1,9 @@
 // The smallest real usage: one source, one intent, one file out.
 // Needs ANTHROPIC_API_KEY (or pass `provider: 'claude-code'` / 'ollama').
 import { writeFile } from 'node:fs/promises'
-import { chewAndRender } from '@shinyaigeek/kamu-core'
+import { carveAndRender } from 'ankou-core'
 
-const { piece, plan, output } = await chewAndRender({
+const { piece, plan, output } = await carveAndRender({
   sources: [process.argv[2] ?? 'README.md'],
   intent: process.argv[3] ?? 'I want to take this in properly, without skimming',
   renderer: 'html',

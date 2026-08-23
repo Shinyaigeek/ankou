@@ -1,12 +1,12 @@
 # Architecture
 
-kamu is a four-stage pipeline with one typed artefact in the middle.
+ankou is a four-stage pipeline with one typed artefact in the middle.
 
 ```
 Source[] ──ingest──▶ Document[] ──plan──▶ Plan ──compose──▶ Piece ──render──▶ text
 ```
 
-Each stage is independently usable. `chew()` runs the first three; `render()` and
+Each stage is independently usable. `carve()` runs the first three; `render()` and
 `playTui()` are the fourth.
 
 ## Ingest — `src/ingest/`
@@ -104,14 +104,14 @@ A provider implements `complete` and optionally `structured`:
   people who have a Claude Code subscription and no API key.
 
 `schema/validate.ts` is a small JSON Schema validator covering exactly the
-keywords kamu's own schemas use. Its job is not general validation — it is to
+keywords ankou's own schemas use. Its job is not general validation — it is to
 describe a model's drift precisely enough that the model can fix it.
 
 ## What is deliberately not here
 
 - **No streaming.** A piece is composed, then rendered. Progress is reported
   through `onProgress`, but partial pieces are not a thing.
-- **No caching layer.** `chew()` is a pure-ish function of (sources, intent,
+- **No caching layer.** `carve()` is a pure-ish function of (sources, intent,
   model); callers who want to cache should cache the `Piece`.
 - **No plugin loader.** Adding a format is adding a file to `src/formats/` and a
   line to its registry. Runtime-loaded formats would mean shipping a sandbox.

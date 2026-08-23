@@ -62,7 +62,7 @@ ${READ_DATA}
       .replace(/[.,。、!！?？"'"'']/g, '');
   }
 
-  KAMU.questions.forEach(function (question, index) {
+  ANKOU.questions.forEach(function (question, index) {
     var card = document.createElement('section');
     card.className = 'qz-q';
     var stars = '●'.repeat(question.difficulty) + '○'.repeat(3 - question.difficulty);
@@ -155,9 +155,9 @@ ${READ_DATA}
     var cards = Array.prototype.slice.call(root.children);
     var right = cards.filter(function (card) { return card.__grade(); }).length;
     score.querySelector('b').textContent = right + ' / ' + cards.length;
-    score.querySelector('span').textContent = right >= KAMU.passScore
-      ? 'It stuck. ' + KAMU.passScore + ' was the bar.'
-      : 'Worth another pass — the bar was ' + KAMU.passScore + '.';
+    score.querySelector('span').textContent = right >= ANKOU.passScore
+      ? 'It stuck. ' + ANKOU.passScore + ' was the bar.'
+      : 'Worth another pass — the bar was ' + ANKOU.passScore + '.';
     score.classList.add('on');
     button.disabled = true;
     retry.hidden = false;
@@ -179,7 +179,7 @@ export function renderQuizHtml(piece: QuizPiece, theme: 'dark' | 'light' | 'auto
     <p class="sub">${piece.questions.length} questions · pass mark ${piece.passScore}</p>
   </header>
   <div class="qz-list"></div>
-  <div class="qz-actions kamu-no-print">
+  <div class="qz-actions ankou-no-print">
     <button type="button" class="primary">Check answers</button>
     <button type="button" class="retry" hidden>Try again</button>
   </div>

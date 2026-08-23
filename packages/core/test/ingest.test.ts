@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ingest, KamuError, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
+import { AnkouError, ingest, kindFromContent, kindFromMime, looksLikeUrl } from '../dist/index.js'
 import { documentFromHtml } from '../dist/ingest/html.js'
 import { markdownToPlain, splitMarkdownSections } from '../dist/ingest/markdown.js'
 import { pdfTitle, reflowPdfText } from '../dist/ingest/pdf.js'
@@ -116,7 +116,7 @@ test('a meta refresh is followed once', async () => {
   assert.ok(document.text.includes('actually wanted'))
 })
 
-test('a client-rendered shell is reported instead of chewed', async () => {
+test('a client-rendered shell is reported instead of carved', async () => {
   const shell = `<html><head><title>App</title></head><body><div id="root">loading</div>${'<script>var x=1;</script>'.repeat(200)}</body></html>`
   await assert.rejects(
     () =>
@@ -252,7 +252,7 @@ test('a PDF with no title in its metadata takes the one on its first page', () =
   const heading = [{ level: 1, title: 'Attention Is All You Need', text: 'body' }]
   assert.equal(pdfTitle({ Title: 'From the metadata' }, heading, 'x.pdf'), 'From the metadata')
   // Otherwise the filename is `2301.12345v2.pdf`, which tells the reader nothing
-  // and ends up in the deck header and the name of the file kamu writes.
+  // and ends up in the deck header and the name of the file ankou writes.
   assert.equal(pdfTitle({}, heading, '2301.12345v2.pdf'), 'Attention Is All You Need')
   assert.equal(pdfTitle({ Title: '   ' }, heading, 'x.pdf'), 'Attention Is All You Need')
   assert.equal(pdfTitle({}, [{ level: 1, title: '', text: 'body' }], 'x.pdf'), 'x.pdf')
@@ -294,9 +294,9 @@ test('a fetch that times out says so, and says which flag raises it', async () =
   await assert.rejects(
     () => ingest('https://example.com/slow', { fetchImpl: neverAnswers, timeoutMs: 50 }),
     (error: unknown) =>
-      error instanceof KamuError &&
+      error instanceof AnkouError &&
       /did not answer within 50ms/.test((error as Error).message) &&
-      /--timeout/.test((error as KamuError).hint ?? ''),
+      /--timeout/.test((error as AnkouError).hint ?? ''),
   )
 })
 
@@ -308,10 +308,10 @@ test('a URL that is not text says what it is', async () => {
     })) as unknown as typeof fetch
   await assert.rejects(
     () => ingest('https://example.com/logo.png', { fetchImpl: png }),
-    (error: unknown) => error instanceof KamuError && /image\/png/.test((error as Error).message),
+    (error: unknown) => error instanceof AnkouError && /image\/png/.test((error as Error).message),
   )
 
-  // A type kamu cannot name is still given the benefit of the doubt: plenty of
+  // A type ankou cannot name is still given the benefit of the doubt: plenty of
   // servers send `application/octet-stream` for a markdown file.
   const octet = (async () =>
     new Response('# Title\n\nSome body text, at enough length to be a document.', {

@@ -1,7 +1,7 @@
 /**
  * A tiny, dependency-free HTML tokenizer and tree builder.
  *
- * kamu only needs enough structure to find the readable part of a page and turn
+ * ankou only needs enough structure to find the readable part of a page and turn
  * it into text, so this deliberately stops well short of a spec-compliant
  * parser: no scripting, no adoption agency, no namespaces. It is tolerant of
  * malformed markup because the input is arbitrary pages from the web.

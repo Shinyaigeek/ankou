@@ -11,7 +11,7 @@ export const DEFAULT_BASE = 'https://api.openai.com/v1'
  */
 export function openai(options: ProviderOptions = {}): LLM {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY
-  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const model = options.model ?? process.env.ANKOU_MODEL ?? DEFAULT_MODEL
   const baseUrl = (options.baseUrl ?? process.env.OPENAI_BASE_URL ?? DEFAULT_BASE).replace(
     /\/$/,
     '',

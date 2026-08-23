@@ -33,7 +33,7 @@ export interface FormatParam {
 export interface FormatModule<F extends FormatId = FormatId> {
   id: F
   label: string
-  /** One line for `kamu formats` and for the planner's menu. */
+  /** One line for `ankou formats` and for the planner's menu. */
   description: string
   /** Concrete reader intents this format is the right answer to. */
   bestFor: string[]
@@ -56,7 +56,7 @@ export const LANG_NAMES: Record<string, string> = {
  * "Write all reader-facing text in fr." is a worse instruction than "in French",
  * and the five-entry table left every other language as its tag. `Intl` knows
  * all of them and ships with Node, so the table is now only a fast path and a
- * guarantee for the languages kamu cares most about.
+ * guarantee for the languages ankou cares most about.
  */
 export function languageName(lang: string): string {
   const tag = lang.trim()
@@ -74,7 +74,7 @@ export function languageName(lang: string): string {
 
 /** The system prompt every format shares. */
 export function systemPrompt(context: ComposeContext, role: string): string {
-  return `You are kamu, a tool that reshapes documents into the form a reader actually wants.
+  return `You are ankou, a tool that reshapes documents into the form a reader actually wants.
 
 ${role}
 
@@ -170,7 +170,7 @@ export function scaleToLength(text: string, unitsPer1000Chars: number, min: numb
  * slides, a quiz that reads "0 questions · pass mark 1" — so a model that
  * returned nothing usable reaches the reader as a finished-looking file. Failing
  * here costs them a rerun; not failing costs them the ability to trust that a
- * file kamu wrote means anything.
+ * file ankou wrote means anything.
  */
 export function requireContent(count: number, what: string): void {
   if (count > 0) return

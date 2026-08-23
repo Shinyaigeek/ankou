@@ -1,9 +1,9 @@
 ---
-name: kamu
-description: Run kamu on a real document — pick the shape, generate it, check it, hand back the page. Use when the user says "これ読みやすくして", "一字一句頭に入れたい", "この記事クイズにして", "スライドにして", "kamu で噛んで", "/kamu", when they point at a spec, paper, PDF or URL and say what they want out of it, or when a change to this repo needs trying on real material rather than only the stub-model tests.
+name: ankou
+description: Run ankou on a real document — pick the shape, generate it, check it, hand back the page. Use when the user says "これ読みやすくして", "一字一句頭に入れたい", "この記事クイズにして", "スライドにして", "ankou で捌いて", "/ankou", when they point at a spec, paper, PDF or URL and say what they want out of it, or when a change to this repo needs trying on real material rather than only the stub-model tests.
 ---
 
-# kamu
+# ankou
 
 Two jobs, same commands:
 
@@ -22,14 +22,14 @@ This is the most common way a run fails for a reason that has nothing to do with
 cd <repo> && pnpm install && pnpm build
 ```
 
-Then either `kamu …` (a launcher on this machine points at this working copy) or
+Then either `ankou …` (a launcher on this machine points at this working copy) or
 `node packages/cli/dist/cli.js …` anywhere the launcher is not installed. Both run the
 working tree, so edits are live after a rebuild.
 
 ## 2. Pick the provider deliberately
 
 ```bash
-kamu providers      # what is ready right now, and what the rest are missing
+ankou providers      # what is ready right now, and what the rest are missing
 ```
 
 The two that need no API key differ enough that the choice changes how you work:
@@ -41,7 +41,7 @@ The two that need no API key differ enough that the choice changes how you work:
 
 `claude-code` spawns a `claude` subprocess per model call, and a long document is windowed
 into several. **Run it with `run_in_background: true`** — a foreground Bash call will hit
-its timeout and tell you nothing about whether kamu worked.
+its timeout and tell you nothing about whether ankou worked.
 
 For ollama, check what is actually pulled (`ollama list`) before promising anything. A 1B
 model gets through the pipeline but writes quiz questions that get dropped as ungradeable
@@ -50,7 +50,7 @@ and glosses that are not worth reading; it is a smoke test, not a result.
 ## 3. Decide the shape before paying for it
 
 ```bash
-kamu <source> -i "<what they want out of it>" --plan-only
+ankou <source> -i "<what they want out of it>" --plan-only
 ```
 
 One cheap model call, and none at all if you also pass `-f`. It prints the format, the
@@ -68,21 +68,21 @@ than something the model promised.
 ## 4. Generate
 
 ```bash
-kamu spec.md -i "一字一句漏らさず頭に入れたい" -o out.html      # html, the default
-kamu post.md -i "覚えたい" --render json -o piece.json         # the structure, saved
-kamu post.md -i "覚えたい" --render tui -o -                   # a plain transcript
+ankou spec.md -i "一字一句漏らさず頭に入れたい" -o out.html      # html, the default
+ankou post.md -i "覚えたい" --render json -o piece.json         # the structure, saved
+ankou post.md -i "覚えたい" --render tui -o -                   # a plain transcript
 ```
 
 On anything that cost a `claude-code` run, **save the piece** (`--render json -o
-piece.json`) and change surfaces with `kamu render` afterwards:
+piece.json`) and change surfaces with `ankou render` afterwards:
 
 ```bash
-kamu render piece.json -o out.html      # instant; no model, no network
-kamu render piece.json --render tui -o -
+ankou render piece.json -o out.html      # instant; no model, no network
+ankou render piece.json --render tui -o -
 ```
 
 Rendering is a pure function of the piece, so a second surface is free. Re-running
-kamu to get the same content as HTML instead of JSON pays the model twice for one
+ankou to get the same content as HTML instead of JSON pays the model twice for one
 answer, and gives you a *different* answer the second time.
 
 Relative sources and `-o` resolve against the directory you are standing in. Write outputs
@@ -95,7 +95,7 @@ user at their own terminal; do not run it expecting to see anything.
 ## 5. Read it before you hand it over
 
 A run that exits 0 has produced a well-formed page, not necessarily a good one. Read the
-saved piece — the JSON directly, or `kamu render piece.json --render tui -o -` for
+saved piece — the JSON directly, or `ankou render piece.json --render tui -o -` for
 something laid out — and check the thing the format promises:
 
 - **flipbook** — is the body verbatim? grep a distinctive sentence from the source.
@@ -111,13 +111,13 @@ own language and is usually worth quoting.
 
 | message | what to do |
 | --- | --- |
-| `The model returned no usable questions` (or slides, scenes, dialogue, summary) | The model came back empty or unusable. Rerun, or move up to a bigger model. kamu refuses to write a page with nothing on it. |
+| `The model returned no usable questions` (or slides, scenes, dialogue, summary) | The model came back empty or unusable. Rerun, or move up to a bigger model. ankou refuses to write a page with nothing on it. |
 | `The sources have no text to play back` | The source was empty or whitespace. Check ingestion first, not the model. |
 | `Cannot reach Ollama at …` | `ollama serve` is not running. It is not a systemd service here. |
 | `… did not return valid <name> JSON after two attempts` | The model could not fill the schema even with its own errors handed back. Almost always too small a model. |
-| `No LLM provider configured` | Pass `--provider`, or set one in `~/.config/kamu/config.json`. |
+| `No LLM provider configured` | Pass `--provider`, or set one in `~/.config/ankou/config.json`. |
 
-## Working on kamu itself
+## Working on ankou itself
 
 `pnpm check && pnpm build && pnpm typecheck && pnpm test` is what CI runs; see
 CONTRIBUTING.md. `node examples/gallery.mjs` renders one page per format from a fixed piece

@@ -5,7 +5,7 @@
   const root = document.documentElement
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  /* Theme. The key is shared with the pages kamu renders, so a demo iframe
+  /* Theme. The key is shared with the pages ankou renders, so a demo iframe
      loaded after a toggle comes up in the same theme as the site. */
   const toggle = document.querySelector('[data-theme-toggle]')
   toggle?.addEventListener('click', () => {
@@ -15,7 +15,7 @@
     const next = dark ? 'light' : 'dark'
     root.setAttribute('data-theme', next)
     try {
-      localStorage.setItem('kamu-theme', next)
+      localStorage.setItem('ankou-theme', next)
     } catch {}
   })
 
@@ -40,7 +40,7 @@
   }
 
   /* The intent chooser: type an intent out one character at a time — the
-     flipbook's own trick — then show the shape kamu would pick for it. */
+     flipbook's own trick — then show the shape ankou would pick for it. */
   const stage = document.querySelector('[data-chooser]')
   if (!stage) return
 

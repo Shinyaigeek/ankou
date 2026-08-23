@@ -1,7 +1,7 @@
 {
-  "name": "@shinyaigeek/kamu-core",
+  "name": "ankou-core",
   "version": "0.1.0",
-  "description": "Chew documents (markdown, text, HTML, PDF, URL) into the shape you actually want to read them in — flipbooks, slides, quizzes, kinetic animations — with an LLM.",
+  "description": "Carve documents (markdown, text, HTML, PDF, URL) into the shape you actually want to read them in — flipbooks, slides, quizzes, kinetic animations — with an LLM.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -47,14 +47,14 @@
   ],
   "author": "Shinyaigeek",
   "license": "MIT",
-  "homepage": "https://github.com/Shinyaigeek/kamu#readme",
+  "homepage": "https://github.com/Shinyaigeek/ankou#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shinyaigeek/kamu.git",
+    "url": "git+https://github.com/Shinyaigeek/ankou.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/Shinyaigeek/kamu/issues"
+    "url": "https://github.com/Shinyaigeek/ankou/issues"
   },
   "engines": {
     "node": ">=22"

@@ -1,4 +1,4 @@
-import { term } from '@shinyaigeek/kamu-core'
+import { term } from 'ankou-core'
 
 const { ansi, palette, paint } = term
 
@@ -37,7 +37,7 @@ export function createUi(quiet: boolean): Ui {
     spinner(message) {
       let text = message
       // Progress belongs on stderr, and only when someone is watching: piping
-      // kamu into a file should not fill it with spinner frames.
+      // ankou into a file should not fill it with spinner frames.
       if (quiet || !stream.isTTY) {
         write(`${c('·', palette.accent)} ${message}`)
         return { update: () => {}, stop: () => {} }

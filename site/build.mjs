@@ -1,7 +1,7 @@
-// Build the kamu site: a handful of HTML fragments wrapped in one layout, plus
+// Build the ankou site: a handful of HTML fragments wrapped in one layout, plus
 // the gallery's rendered pages copied in as live demos.
 //
-// No framework, for the same reason kamu-core has no runtime dependencies: the
+// No framework, for the same reason ankou-core has no runtime dependencies: the
 // output is static HTML, and a build step nobody can read is a build step
 // nobody maintains.
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
@@ -17,33 +17,33 @@ const NAV = [
   { href: './formats.html', label: 'Formats' },
   { href: './providers.html', label: 'Providers' },
   { href: './agents.html', label: 'Agents' },
-  { href: 'https://github.com/Shinyaigeek/kamu', label: 'GitHub', external: true },
+  { href: 'https://github.com/Shinyaigeek/ankou', label: 'GitHub', external: true },
 ]
 
 const PAGES = [
   {
     slug: 'index',
-    title: 'kamu — chew a document into the shape you want to read it in',
+    title: 'ankou — carve a document into the shape you want to read it in',
     description:
-      'kamu takes documents and what you want out of them, picks the shape — flipbook, slides, quiz, animation, summary, dialogue — and renders it as a page you can actually read.',
+      'ankou takes documents and what you want out of them, picks the shape — flipbook, slides, quiz, animation, summary, dialogue — and renders it as a page you can actually read.',
   },
   {
     slug: 'formats',
-    title: 'Formats — kamu',
+    title: 'Formats — ankou',
     description:
-      'The six shapes kamu can chew a document into, what each one is for, and a live rendered example of every single one.',
+      'The six shapes ankou can carve a document into, what each one is for, and a live rendered example of every single one.',
   },
   {
     slug: 'providers',
-    title: 'LLM providers — kamu',
+    title: 'LLM providers — ankou',
     description:
       'Anthropic, OpenAI-compatible endpoints, Ollama, a Claude Code subscription, or any model you bring yourself.',
   },
   {
     slug: 'agents',
-    title: 'Using kamu from an agent — kamu',
+    title: 'Using ankou from an agent — ankou',
     description:
-      'kamu as a tool call: one typed Piece, many surfaces, your host model, cancellation and progress included.',
+      'ankou as a tool call: one typed Piece, many surfaces, your host model, cancellation and progress included.',
   },
 ]
 

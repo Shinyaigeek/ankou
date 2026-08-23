@@ -3,7 +3,7 @@
     <p class="eyebrow">Agents</p>
     <h1>Built to be called by something else</h1>
     <p class="lede">
-      Half the point of kamu is embedding it. An agent already knows what the user asked
+      Half the point of ankou is embedding it. An agent already knows what the user asked
       for — that sentence <em>is</em> the intent — and what comes back is typed JSON, not a
       blob of prose it has to re-read.
     </p>
@@ -31,7 +31,7 @@
       <p class="card-glyph">why it fits</p>
       <h3>The decision is cheap and separable</h3>
       <p class="muted">
-        <code>chewPlan()</code> is one small call: the format it would pick and the
+        <code>carvePlan()</code> is one small call: the format it would pick and the
         rationale, in the user's language. Show it, route on it, or price the job before
         committing to it.
       </p>
@@ -50,13 +50,13 @@
       </p>
       <p class="muted">
         <code>FORMAT_IDS</code> is exported, so the enum in your tool schema is generated
-        from the same registry the planner reads — a format added to kamu shows up in your
+        from the same registry the planner reads — a format added to ankou shows up in your
         tool definition on the next release rather than after you remember to update a
         list.
       </p>
-      <p><a href="https://github.com/Shinyaigeek/kamu/blob/main/docs/SDK.md" rel="noreferrer">Full SDK reference →</a></p>
+      <p><a href="https://github.com/Shinyaigeek/ankou/blob/main/docs/SDK.md" rel="noreferrer">Full SDK reference →</a></p>
     </div>
-    <div class="code"><pre><code>import { chewAndRender, FORMAT_IDS } from '@shinyaigeek/kamu-core'
+    <div class="code"><pre><code>import { carveAndRender, FORMAT_IDS } from 'ankou-core'
 
 export const readTool = {
   name: 'reshape_document',
@@ -68,13 +68,13 @@ export const readTool = {
     properties: {
       sources: { type: 'array', items: { type: 'string' } },
       intent: { type: 'string', description: "What the user wants out of it, in their words." },
-      format: { type: 'string', enum: FORMAT_IDS, description: 'Optional; omit to let kamu choose.' },
+      format: { type: 'string', enum: FORMAT_IDS, description: 'Optional; omit to let ankou choose.' },
     },
     required: ['sources', 'intent'],
   },
 
   async run({ sources, intent, format }, { signal }) {
-    const { piece, plan, output } = await chewAndRender({
+    const { piece, plan, output } = await carveAndRender({
       sources,
       intent,
       ...(format ? { format } : {}),
@@ -102,11 +102,11 @@ export const readTool = {
     <li>
       <h3>Reuse the host's model</h3>
       <p class="muted">
-        Pass <code>llm</code> rather than <code>provider</code> and kamu bills, rate-limits
+        Pass <code>llm</code> rather than <code>provider</code> and ankou bills, rate-limits
         and retries through the same client as the rest of your app — one place to put your
         keys, one place to watch your spend.
       </p>
-      <div class="code"><pre><code>await chew({ sources, intent, llm: myAgentsModel })</code></pre></div>
+      <div class="code"><pre><code>await carve({ sources, intent, llm: myAgentsModel })</code></pre></div>
     </li>
     <li>
       <h3>Store the Piece, not the page</h3>
@@ -114,7 +114,7 @@ export const readTool = {
         The user asks for the deck on their phone, then the quiz in the terminal, then the
         JSON for another tool. That is three renders of one model call.
       </p>
-      <div class="code"><pre><code>const { piece } = await chew({ sources, intent })
+      <div class="code"><pre><code>const { piece } = await carve({ sources, intent })
 await db.pieces.put(id, piece)
 
 render(piece, 'html', { theme: 'dark' })   <span class="cm">// { content, ext, mime }</span>
@@ -132,7 +132,7 @@ render(piece, 'json')</code></pre></div>
       </p>
       <div class="code"><pre><code>const controller = new AbortController()
 
-await chew({
+await carve({
   sources,
   intent,
   signal: controller.signal,
@@ -142,16 +142,16 @@ await chew({
     <li>
       <h3>Let the errors do the talking</h3>
       <p class="muted">
-        Everything kamu throws deliberately is a <code>KamuError</code> with a code —
+        Everything ankou throws deliberately is a <code>AnkouError</code> with a code —
         <code>INGEST</code>, <code>LLM</code>, <code>COMPOSE</code>, <code>CONFIG</code> —
         and usually a <code>hint</code> that says what to do about it. An agent can branch
         on the code and pass the hint straight to the user instead of inventing an
         explanation.
       </p>
       <div class="code"><pre><code>try {
-  await chew({ sources, intent })
+  await carve({ sources, intent })
 } catch (error) {
-  if (error instanceof KamuError) reply(`${error.message} ${error.hint ?? ''}`)
+  if (error instanceof AnkouError) reply(`${error.message} ${error.hint ?? ''}`)
   else throw error
 }</code></pre></div>
     </li>
@@ -168,16 +168,16 @@ await chew({
         piece to stdout, takes stdin as a source, and stays quiet when asked.
       </p>
       <div class="code"><pre><code><span class="cm"># decide first — one cheap call, nothing generated</span>
-kamu paper.pdf -i "$USER_ASK" --plan-only -q
+ankou paper.pdf -i "$USER_ASK" --plan-only -q
 
 <span class="cm"># then generate, and keep the structure</span>
-kamu paper.pdf -i "$USER_ASK" --render json -o - -q &gt; piece.json
+ankou paper.pdf -i "$USER_ASK" --render json -o - -q &gt; piece.json
 
 <span class="cm"># render it anywhere later, no model, no network</span>
-kamu render piece.json --render html -o out.html
+ankou render piece.json --render html -o out.html
 
 <span class="cm"># pipe a document straight in</span>
-cat draft.md | kamu - -i "make it land" -f animation --open</code></pre></div>
+cat draft.md | ankou - -i "make it land" -f animation --open</code></pre></div>
       <p class="muted">
         <code>-q</code> silences progress so stdout is only ever the artefact. Exit codes
         and the error hints come through on stderr.
@@ -189,13 +189,13 @@ cat draft.md | kamu - -i "make it land" -f animation --open</code></pre></div>
       <p>
         <code>--provider claude-code</code> runs generation through the Claude Agent SDK
         and authenticates with a Claude Code subscription — so an agent working in someone's
-        checkout can chew a spec without asking them to provision credentials first.
+        checkout can carve a spec without asking them to provision credentials first.
       </p>
       <div class="code"><pre><code>npm i @anthropic-ai/claude-agent-sdk
-kamu ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>
+ankou ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>
       <p>
         The repository also ships a Claude Code skill at
-        <code>.claude/skills/kamu/SKILL.md</code>: it knows to build first, to pick the
+        <code>.claude/skills/ankou/SKILL.md</code>: it knows to build first, to pick the
         provider deliberately, and to check the output rather than declare victory when the
         command exits 0.
       </p>
@@ -227,7 +227,7 @@ kamu ./RFC.md -i "review this properly" -p claude-code --open</code></pre></div>
       <p class="muted">Four built-ins over plain <code>fetch</code>, or a two-method interface for your own.</p>
       <p class="card-more">Wiring one up →</p>
     </a>
-    <a class="card" href="https://github.com/Shinyaigeek/kamu/blob/main/docs/SDK.md" rel="noreferrer">
+    <a class="card" href="https://github.com/Shinyaigeek/ankou/blob/main/docs/SDK.md" rel="noreferrer">
       <p class="card-glyph">reference</p>
       <h3>Every option, typed</h3>
       <p class="muted">Sources, windows, ingest overrides, pieces, renderers, and the worked embedding example.</p>

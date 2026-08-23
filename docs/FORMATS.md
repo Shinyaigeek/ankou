@@ -1,6 +1,6 @@
 # Formats
 
-Every format is a `FormatModule` in `packages/core/src/formats/`. `kamu formats`
+Every format is a `FormatModule` in `packages/core/src/formats/`. `ankou formats`
 prints this list from the code, so it can never drift from what is installed.
 
 ## flipbook

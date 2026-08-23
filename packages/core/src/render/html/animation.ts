@@ -65,7 +65,7 @@ ${READ_DATA}
   var stage = document.querySelector('.an-stage');
   var progress = document.querySelector('.an-progress i');
   var hint = document.querySelector('.an-hint');
-  var scenes = KAMU.scenes || [];
+  var scenes = ANKOU.scenes || [];
   var at = -1, playing = true, timer = null;
 
   function typewrite(node, text, duration) {

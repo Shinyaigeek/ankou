@@ -18,7 +18,7 @@ import type {
 } from './types.js'
 import { detectLang } from './util/text.js'
 
-export interface ChewOptions {
+export interface CarveOptions {
   /** What the reader wants out of this. The whole point of the tool. */
   intent: string
   /** Sources: paths, URLs, or inline content. */
@@ -27,7 +27,7 @@ export interface ChewOptions {
   format?: FormatId
   /** Merged into whatever params the planner chooses. */
   params?: Record<string, unknown>
-  /** Bring your own model, or let kamu build one from `provider`. */
+  /** Bring your own model, or let ankou build one from `provider`. */
   llm?: LLM
   provider?: ProviderId
   providerOptions?: ProviderOptions
@@ -40,13 +40,13 @@ export interface ChewOptions {
   signal?: AbortSignal
 }
 
-export interface ChewResult {
+export interface CarveResult {
   piece: Piece
   plan: Plan
   documents: Document[]
 }
 
-export interface ChewPlanResult {
+export interface CarvePlanResult {
   plan: Plan
   documents: Document[]
   /** The model the plan was made with, ready to compose with. */
@@ -69,7 +69,7 @@ function outputLanguage(intent: string, documents: Document[]): string {
   return documents[0]?.lang ?? 'en'
 }
 
-function resolveLLM(options: ChewOptions): LLM {
+function resolveLLM(options: CarveOptions): LLM {
   if (options.llm) return options.llm
   const provider = options.provider ?? detectProvider()
   if (!provider) {
@@ -88,13 +88,13 @@ function resolveLLM(options: ChewOptions): LLM {
  * its own: it is what `--plan-only` needs, and it lets a caller show the reader
  * what it is about to make before making it.
  */
-export async function chewPlan(options: ChewOptions): Promise<ChewPlanResult> {
+export async function carvePlan(options: CarveOptions): Promise<CarvePlanResult> {
   const llm = resolveLLM(options)
   const progress = options.onProgress
 
   progress?.({ stage: 'ingest', message: 'Reading the sources' })
   const documents = await ingestAll(options.sources, options.ingest ?? {})
-  if (documents.length === 0) throw configError('No sources to chew.')
+  if (documents.length === 0) throw configError('No sources to carve.')
   // A model handed nothing does not say "there was nothing there". It writes a
   // summary of the document it imagines you meant, and the run looks like it
   // worked. `requireContent` cannot catch that: the model did return content.
@@ -123,12 +123,12 @@ export async function chewPlan(options: ChewOptions): Promise<ChewPlanResult> {
  * Ingest → plan → compose. The result is a `Piece`: the format-specific
  * intermediate representation, not yet rendered.
  *
- * Keeping composition and rendering apart is what lets the same chewed piece be
+ * Keeping composition and rendering apart is what lets the same carved piece be
  * played in a terminal, opened in a browser, or handed to another program as
  * JSON without asking the model to do the work twice.
  */
-export async function chew(options: ChewOptions): Promise<ChewResult> {
-  const { plan, documents, llm, lang } = await chewPlan(options)
+export async function carve(options: CarveOptions): Promise<CarveResult> {
+  const { plan, documents, llm, lang } = await carvePlan(options)
 
   const context: ComposeContext = {
     documents,
@@ -141,22 +141,22 @@ export async function chew(options: ChewOptions): Promise<ChewResult> {
     signal: options.signal,
   }
 
-  options.onProgress?.({ stage: 'compose', message: `Chewing into ${plan.format}` })
+  options.onProgress?.({ stage: 'compose', message: `Carving into ${plan.format}` })
   const piece = await getFormat(plan.format).compose(context)
 
   return { piece, plan, documents }
 }
 
-export interface ChewAndRenderOptions extends ChewOptions {
+export interface CarveAndRenderOptions extends CarveOptions {
   renderer?: RendererId
   renderOptions?: RenderOptions
 }
 
-/** `chew`, then render in one call — the shape most callers want. */
-export async function chewAndRender(
-  options: ChewAndRenderOptions,
-): Promise<ChewResult & { output: RenderResult }> {
-  const result = await chew(options)
+/** `carve`, then render in one call — the shape most callers want. */
+export async function carveAndRender(
+  options: CarveAndRenderOptions,
+): Promise<CarveResult & { output: RenderResult }> {
+  const result = await carve(options)
   options.onProgress?.({ stage: 'render', message: `Rendering as ${options.renderer ?? 'html'}` })
   return {
     ...result,

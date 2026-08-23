@@ -3,7 +3,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { charsetFromMeta, decodeBytes, ingest, KamuError } from '../dist/index.js'
+import { AnkouError, charsetFromMeta, decodeBytes, ingest } from '../dist/index.js'
 
 const SJIS_HTML =
   '<!doctype html><html><head><meta charset="Shift_JIS"><title>契約書</title></head>' +
@@ -73,13 +73,13 @@ test('undeclared bytes that are not UTF-8 are refused, not mangled', () => {
   assert.throws(
     () => decodeBytes(toShiftJis(SENTENCE), 'notes.txt', {}),
     (error: unknown) =>
-      error instanceof KamuError && /not valid UTF-8/.test((error as Error).message),
+      error instanceof AnkouError && /not valid UTF-8/.test((error as Error).message),
   )
   assert.equal(decodeBytes(new TextEncoder().encode('普通の UTF-8'), 'x', {}), '普通の UTF-8')
 })
 
 test('a page is ingested in the encoding it declares', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'kamu-encoding-'))
+  const directory = await mkdtemp(join(tmpdir(), 'ankou-encoding-'))
   const path = join(directory, 'page.html')
   await writeFile(path, toShiftJis(SJIS_HTML))
 
@@ -89,13 +89,13 @@ test('a page is ingested in the encoding it declares', async () => {
 })
 
 test('a source can carry the encoding its bytes do not declare', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'kamu-encoding-'))
+  const directory = await mkdtemp(join(tmpdir(), 'ankou-encoding-'))
   const path = join(directory, 'notes.txt')
   await writeFile(path, toShiftJis(SENTENCE))
 
   await assert.rejects(
     () => ingest(path),
-    (error: unknown) => error instanceof KamuError,
+    (error: unknown) => error instanceof AnkouError,
   )
 
   const named = await ingest({ path, encoding: 'shift_jis' })

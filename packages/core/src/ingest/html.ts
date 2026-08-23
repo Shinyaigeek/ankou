@@ -172,7 +172,7 @@ function toMarkdown(node: Node, depth = 0): string {
 
 /**
  * A page whose markup dwarfs its text is almost always rendered client-side.
- * Chewing thirty characters of shell is worse than saying so — and this has to
+ * Carving thirty characters of shell is worse than saying so — and this has to
  * apply to a saved file too, since "save it from the browser" is the advice.
  */
 function assertNotEmptyShell(document: Document, htmlLength: number, ref: string): void {

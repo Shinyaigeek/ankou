@@ -32,7 +32,7 @@ export interface JsonSchema {
 }
 
 /**
- * The whole surface kamu needs from a model. Implement this to plug in any
+ * The whole surface ankou needs from a model. Implement this to plug in any
  * provider — the pipeline never touches a vendor SDK directly.
  */
 export interface LLM {

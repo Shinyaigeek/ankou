@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { anthropic, detectProvider, KamuError, ollama, S } from '../dist/index.js'
+import { AnkouError, anthropic, detectProvider, ollama, S } from '../dist/index.js'
 import { extractJson, structuredViaPrompt } from '../dist/llm/json.js'
 
 const PACING = S.object(
@@ -111,7 +111,7 @@ test('ollama falls back when the daemon rejects the schema, not when it is absen
         prompt: 'pace it',
       }),
     (error: unknown) =>
-      error instanceof KamuError && /Cannot reach Ollama/.test((error as Error).message),
+      error instanceof AnkouError && /Cannot reach Ollama/.test((error as Error).message),
   )
 })
 
@@ -135,7 +135,7 @@ test('anthropic repairs an out-of-range tool result instead of abandoning the ru
 test('detectProvider takes OLLAMA_HOST as a choice, not a coincidence', () => {
   const saved = { ...process.env }
   try {
-    for (const key of ['KAMU_PROVIDER', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'OLLAMA_HOST']) {
+    for (const key of ['ANKOU_PROVIDER', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'OLLAMA_HOST']) {
       delete process.env[key]
     }
     assert.equal(detectProvider(), undefined)

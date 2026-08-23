@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { anthropic, claudeCode, KamuError, ollama, openai, S } from '../dist/index.js'
+import { AnkouError, anthropic, claudeCode, ollama, openai, S } from '../dist/index.js'
 
 /**
  * What each provider actually puts on the wire.
@@ -106,7 +106,7 @@ test('anthropic without a key fails before it reaches the network', () => {
   const { calls, fetchImpl } = recorder([])
   assert.throws(
     () => anthropic({ apiKey: '', fetchImpl }),
-    (error: unknown) => error instanceof KamuError && error.code === 'CONFIG',
+    (error: unknown) => error instanceof AnkouError && error.code === 'CONFIG',
   )
   assert.equal(calls.length, 0)
 })
@@ -116,7 +116,7 @@ test('anthropic reports the status and the body when the API refuses', async () 
   await assert.rejects(
     () => anthropic({ apiKey: 'sk-test', fetchImpl }).complete({ prompt: 'hi' }),
     (error: unknown) =>
-      error instanceof KamuError &&
+      error instanceof AnkouError &&
       /429/.test(error.message) &&
       /rate limited/.test(error.hint ?? ''),
   )
@@ -201,7 +201,7 @@ test('openai needs a key only for the hosted endpoint', () => {
   const { fetchImpl } = recorder([])
   assert.throws(
     () => openai({ apiKey: '', fetchImpl }),
-    (error: unknown) => error instanceof KamuError && error.code === 'CONFIG',
+    (error: unknown) => error instanceof AnkouError && error.code === 'CONFIG',
   )
   assert.doesNotThrow(() => openai({ apiKey: '', baseUrl: 'http://127.0.0.1:1234/v1', fetchImpl }))
 })
@@ -241,7 +241,7 @@ test('ollama passes the schema to the daemon as a format', async () => {
 
 // --- claude-code ------------------------------------------------------------
 
-/** The message shapes kamu reads out of the Claude Agent SDK stream. */
+/** The message shapes ankou reads out of the Claude Agent SDK stream. */
 function stubSdk(
   messages: unknown[],
   seen: { prompt?: string; options?: Record<string, unknown> } = {},
@@ -296,7 +296,7 @@ test('claude-code explains a run that produced nothing', async () => {
   await assert.rejects(
     () => llm.complete({ prompt: 'hi' }),
     (error: unknown) =>
-      error instanceof KamuError &&
+      error instanceof AnkouError &&
       /error_during_execution/.test(error.message) &&
       /logged in/.test(error.hint ?? ''),
   )
@@ -342,7 +342,7 @@ test('claude-code names the optional package when the SDK is not installed', asy
   await assert.rejects(
     () => claudeCode().complete({ prompt: 'hi' }),
     (error: unknown) =>
-      error instanceof KamuError &&
+      error instanceof AnkouError &&
       error.code === 'CONFIG' &&
       /claude-agent-sdk/.test(error.message),
   )

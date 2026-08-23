@@ -1,10 +1,10 @@
 /**
- * kamu — chew documents into the shape you actually want to read them in.
+ * ankou — carve documents into the shape you actually want to read them in.
  *
  * ```ts
- * import { chewAndRender } from '@shinyaigeek/kamu-core'
+ * import { carveAndRender } from 'ankou-core'
  *
- * const { output } = await chewAndRender({
+ * const { output } = await carveAndRender({
  *   sources: ['./spec.md', 'https://example.com/post'],
  *   intent: '一字一句漏らさず頭に入れたい',
  *   provider: 'anthropic',
@@ -14,15 +14,15 @@
  */
 
 export {
-  type ChewAndRenderOptions,
-  type ChewOptions,
-  type ChewPlanResult,
-  type ChewResult,
-  chew,
-  chewAndRender,
-  chewPlan,
-} from './chew.js'
-export { KamuError } from './errors.js'
+  type CarveAndRenderOptions,
+  type CarveOptions,
+  type CarvePlanResult,
+  type CarveResult,
+  carve,
+  carveAndRender,
+  carvePlan,
+} from './carve.js'
+export { AnkouError } from './errors.js'
 export {
   type ComposeContext,
   FORMAT_IDS,

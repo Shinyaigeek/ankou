@@ -23,7 +23,7 @@ const DARK_TOKENS = `  --bg: #14130f;
 /**
  * Shared design tokens.
  *
- * Everything kamu emits is a single file with no network dependencies, so the
+ * Everything ankou emits is a single file with no network dependencies, so the
  * palette, the type scale and the theme switch all live here rather than in a
  * stylesheet the reader would have to keep next to the HTML.
  */
@@ -101,24 +101,24 @@ pre {
   padding: 1rem 1.1rem;
   overflow-x: auto;
 }
-.kamu-topbar {
+.ankou-topbar {
   position: fixed; top: 0; right: 0; z-index: 50;
   display: flex; gap: .4rem; align-items: center;
   padding: .7rem .9rem;
 }
-.kamu-topbar button { padding: .3em .8em; font-size: .8rem; opacity: .55; }
-.kamu-topbar button:hover { opacity: 1; }
-.kamu-credit {
+.ankou-topbar button { padding: .3em .8em; font-size: .8rem; opacity: .55; }
+.ankou-topbar button:hover { opacity: 1; }
+.ankou-credit {
   color: var(--fg-faint); font-size: .74rem; letter-spacing: .04em;
   padding: 3rem 1.5rem 2rem; text-align: center;
 }
-.kamu-credit b { font-weight: 600; color: var(--fg-muted); }
-.kamu-scroll { overflow-x: auto; max-width: 100%; }
+.ankou-credit b { font-weight: 600; color: var(--fg-muted); }
+.ankou-scroll { overflow-x: auto; max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 @media print {
-  .kamu-topbar, .kamu-no-print { display: none !important; }
+  .ankou-topbar, .ankou-no-print { display: none !important; }
   body { background: #fff; color: #000; }
 }
 `
@@ -134,12 +134,12 @@ pre {
 const THEME_SCRIPT = `
 (function () {
   var root = document.documentElement;
-  var KEY = 'kamu-theme';
+  var KEY = 'ankou-theme';
   try {
     var saved = localStorage.getItem(KEY);
     if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
   } catch (e) {}
-  window.kamuToggleTheme = function () {
+  window.ankouToggleTheme = function () {
     var isDark = root.getAttribute('data-theme') === 'dark' ||
       (!root.hasAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
     var next = isDark ? 'light' : 'dark';
@@ -170,30 +170,30 @@ export function htmlDocument(options: ShellOptions, parts: HtmlParts): string {
   const dataIsland =
     parts.data === undefined
       ? ''
-      : `<script id="kamu-data" type="application/json">${escapeJson(parts.data)}</script>`
+      : `<script id="ankou-data" type="application/json">${escapeJson(parts.data)}</script>`
 
   return `<!doctype html>
 <html lang="${escapeHtml(options.lang)}"${themeAttr}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="generator" content="kamu">
+<meta name="generator" content="ankou">
 <script>${THEME_SCRIPT}</script>
 <title>${escapeHtml(options.title)}</title>
 <style>${BASE_STYLES}${parts.styles}</style>
 </head>
 <body>
-<div class="kamu-topbar kamu-no-print">
+<div class="ankou-topbar ankou-no-print">
 ${options.controls ?? ''}
-<button type="button" onclick="window.kamuToggleTheme()" aria-label="Toggle colour theme" title="Toggle theme">◐</button>
+<button type="button" onclick="window.ankouToggleTheme()" aria-label="Toggle colour theme" title="Toggle theme">◐</button>
 </div>
 ${parts.body}
 ${
   options.fullBleed
     ? ''
-    : `<p class="kamu-credit">${escapeHtml(options.subtitle ?? '')}${
+    : `<p class="ankou-credit">${escapeHtml(options.subtitle ?? '')}${
         options.subtitle ? ' · ' : ''
-      }chewed by <b>kamu</b></p>`
+      }carved by <b>ankou</b></p>`
 }
 ${dataIsland}
 ${parts.script ? `<script>${parts.script}</script>` : ''}
@@ -204,5 +204,5 @@ ${parts.script ? `<script>${parts.script}</script>` : ''}
 
 /** Read the embedded JSON island. Prepended to every client script that needs it. */
 export const READ_DATA = `
-var KAMU = JSON.parse(document.getElementById('kamu-data').textContent);
+var ANKOU = JSON.parse(document.getElementById('ankou-data').textContent);
 `

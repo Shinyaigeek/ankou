@@ -33,7 +33,7 @@ export const ollamaHost = (baseUrl?: string): string =>
 
 /** Local models through the Ollama daemon. No key, no cost, no network egress. */
 export function ollama(options: ProviderOptions = {}): LLM {
-  const model = options.model ?? process.env.KAMU_MODEL ?? DEFAULT_MODEL
+  const model = options.model ?? process.env.ANKOU_MODEL ?? DEFAULT_MODEL
   const baseUrl = ollamaHost(options.baseUrl)
   const doFetch = options.fetchImpl ?? fetch
 

@@ -32,7 +32,7 @@ export const PROVIDERS = Object.keys(FACTORIES) as ProviderId[]
  * guessing would mean a blocking probe on every run.
  */
 export function detectProvider(): ProviderId | undefined {
-  const configured = process.env.KAMU_PROVIDER as ProviderId | undefined
+  const configured = process.env.ANKOU_PROVIDER as ProviderId | undefined
   if (configured && configured in FACTORIES) return configured
   if (process.env.ANTHROPIC_API_KEY) return 'anthropic'
   if (process.env.OPENAI_API_KEY) return 'openai'
@@ -130,7 +130,7 @@ export function createLLM(provider: ProviderId, options: ProviderOptions = {}): 
 
 /**
  * Structured generation that works whether or not the provider implements it
- * natively — every call site in kamu goes through here.
+ * natively — every call site in ankou goes through here.
  */
 export async function ask<T>(
   llm: LLM,

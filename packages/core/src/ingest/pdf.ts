@@ -5,7 +5,7 @@ import { inferSections } from './text.js'
 
 /**
  * PDF text extraction is delegated to `unpdf` (a pdf.js build without the DOM
- * requirements). It is an optional peer dependency: the rest of kamu works
+ * requirements). It is an optional peer dependency: the rest of ankou works
  * without it, and PDFs fail with an actionable message instead of a stack.
  */
 async function extract(
@@ -17,7 +17,7 @@ async function extract(
   } catch {
     throw ingestError(
       'PDF support requires the optional `unpdf` package.',
-      'Install it with `npm i unpdf` (or `pnpm add unpdf`) in the project that runs kamu.',
+      'Install it with `npm i unpdf` (or `pnpm add unpdf`) in the project that runs ankou.',
     )
   }
   const pdf = await unpdf.getDocumentProxy(bytes)
@@ -94,7 +94,7 @@ export function reflowPdfText(page: string): string {
  *
  * A downloaded paper is named `2301.12345v2.pdf` and often carries no title in
  * its metadata, which left the filename standing in for one — in the deck
- * header, in the browser tab, and in the name of the file kamu writes back out.
+ * header, in the browser tab, and in the name of the file ankou writes back out.
  * The document says what it is called on its first page.
  */
 export function pdfTitle(
@@ -121,7 +121,7 @@ export async function documentFromPdf(
   if (!text) {
     throw ingestError(
       `No extractable text in ${ref}.`,
-      'The PDF is probably a scan. Run OCR on it first, then feed the result to kamu.',
+      'The PDF is probably a scan. Run OCR on it first, then feed the result to ankou.',
     )
   }
   const sections = inferSections(text)

@@ -119,9 +119,9 @@ function visualHtml(slide: Slide): string {
         visual.caption,
       )}</span></div>`
     case 'mermaid':
-      return `<div class="sl-visual kamu-scroll"><pre class="mermaid">${escapeHtml(visual.code)}</pre></div>`
+      return `<div class="sl-visual ankou-scroll"><pre class="mermaid">${escapeHtml(visual.code)}</pre></div>`
     case 'code':
-      return `<div class="sl-visual kamu-scroll"><pre><code class="language-${escapeHtml(
+      return `<div class="sl-visual ankou-scroll"><pre><code class="language-${escapeHtml(
         visual.language,
       )}">${escapeHtml(visual.code)}</code></pre></div>`
     default:

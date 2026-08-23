@@ -24,7 +24,7 @@ test('nearestFlag suggests the flag a typo was reaching for', () => {
   assert.equal(nearestFlag('wildlyunrelated'), undefined)
 })
 
-test('the flags kamu does define still parse', () => {
+test('the flags ankou does define still parse', () => {
   const args = parseArgs([
     'spec.md',
     '-i',

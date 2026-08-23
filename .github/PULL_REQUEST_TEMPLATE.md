@@ -17,6 +17,6 @@
 ## Notes
 
 - [ ] One change — a fix and a refactor are two PRs
-- [ ] No new runtime dependency in `kamu-core` (or the PR argues for it)
+- [ ] No new runtime dependency in `ankou-core` (or the PR argues for it)
 - [ ] Docs updated if a flag, format or SDK surface moved
 - [ ] `CHANGELOG.md` updated under `Unreleased`, if a user would notice

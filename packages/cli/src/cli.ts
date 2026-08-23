@@ -2,14 +2,14 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import {
-  chew,
-  chewPlan,
+  AnkouError,
+  carve,
+  carvePlan,
   type Document,
   FORMAT_IDS,
   isFormatId,
   isPiece,
   isRendererId,
-  KamuError,
   type Piece,
   type Plan,
   PROVIDERS,
@@ -21,9 +21,9 @@ import {
   type RendererId,
   render,
   type Source,
-} from '@shinyaigeek/kamu-core'
+} from 'ankou-core'
 import { flagBool, flagList, flagString, nearestFlag, parseArgs, parseParams } from './args.js'
-import { type KamuConfig, loadConfig } from './config.js'
+import { type AnkouConfig, loadConfig } from './config.js'
 import { formatsText, helpText, providersText } from './help.js'
 import { openInBrowser } from './open.js'
 import { createUi } from './ui.js'
@@ -42,7 +42,7 @@ function slugify(input: string): string {
     .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60)
-  return slug || 'kamu'
+  return slug || 'ankou'
 }
 
 async function main(argv: string[]): Promise<number> {
@@ -59,8 +59,8 @@ async function main(argv: string[]): Promise<number> {
     ui.error(
       `Unknown ${args.unknown.length === 1 ? 'option' : 'options'}: ${args.unknown.join(', ')}.`,
       guess
-        ? `Did you mean \`--${guess}\`? Run \`kamu --help\` for the full list.`
-        : 'Run `kamu --help` for the full list.',
+        ? `Did you mean \`--${guess}\`? Run \`ankou --help\` for the full list.`
+        : 'Run `ankou --help` for the full list.',
     )
     return 1
   }
@@ -98,14 +98,14 @@ async function main(argv: string[]): Promise<number> {
   }
   const theme = (flagString(args, 'theme') ?? config.theme ?? 'auto') as 'dark' | 'light' | 'auto'
 
-  // `kamu render <piece.json>` — a piece outlives the run that made it, so
+  // `ankou render <piece.json>` — a piece outlives the run that made it, so
   // changing the surface it is read on should not mean paying the model again.
   if (command === 'render') {
     const source = args.positionals[1]
     if (!source) {
       ui.error(
-        'kamu render needs a piece to render.',
-        'e.g. kamu render deck.json --render html — or "-" to read stdin.',
+        'ankou render needs a piece to render.',
+        'e.g. ankou render deck.json --render html — or "-" to read stdin.',
       )
       return 1
     }
@@ -122,7 +122,7 @@ async function main(argv: string[]): Promise<number> {
     const problems = pieceProblems(parsed)
     if (problems.length > 0 || !isPiece(parsed)) {
       ui.error(
-        `\`${source}\` is not a kamu piece kamu can render.`,
+        `\`${source}\` is not a ankou piece ankou can render.`,
         `Missing or wrong: ${problems.join(', ')}. A piece is what \`--render json\` writes.`,
       )
       return 1
@@ -156,8 +156,8 @@ async function main(argv: string[]): Promise<number> {
   const formatFlag = flagString(args, 'format')
   if (!intent && !formatFlag) {
     ui.error(
-      'Tell kamu what you want out of this.',
-      'e.g. kamu spec.md -i "一字一句頭に入れたい"  — or pass --format to pick a shape directly.',
+      'Tell ankou what you want out of this.',
+      'e.g. ankou spec.md -i "一字一句頭に入れたい"  — or pass --format to pick a shape directly.',
     )
     return 1
   }
@@ -176,7 +176,7 @@ async function main(argv: string[]): Promise<number> {
   const controller = new AbortController()
   process.once('SIGINT', () => controller.abort())
 
-  // --- chew ----------------------------------------------------------------
+  // --- carve ----------------------------------------------------------------
   const planOnly = flagBool(args, 'plan-only') ?? false
   const spinner = ui.spinner('Reading the sources')
   const options = {
@@ -205,18 +205,18 @@ async function main(argv: string[]): Promise<number> {
   }
 
   // `--plan-only` stops after the planner, which is the point of it: composing
-  // is where the tokens go, and the reader asked what kamu would make, not for
+  // is where the tokens go, and the reader asked what ankou would make, not for
   // it to be made.
   let result: { plan: Plan; documents: Document[]; piece?: Piece }
   try {
-    result = planOnly ? await chewPlan(options) : await chew(options)
+    result = planOnly ? await carvePlan(options) : await carve(options)
   } catch (error) {
     spinner.stop()
     if (controller.signal.aborted) {
       ui.warn('Stopped.')
       return 130
     }
-    if (error instanceof KamuError) {
+    if (error instanceof AnkouError) {
       ui.error(error.message, error.hint)
       return 1
     }
@@ -250,7 +250,7 @@ async function main(argv: string[]): Promise<number> {
 
 interface DeliverContext {
   args: ReturnType<typeof parseArgs>
-  config: KamuConfig
+  config: AnkouConfig
   ui: ReturnType<typeof createUi>
   renderer: RendererId
   theme: 'dark' | 'light' | 'auto'
@@ -260,7 +260,7 @@ interface DeliverContext {
 /**
  * Put a finished piece somewhere: a live terminal session, stdout, or a file.
  *
- * Shared by chewing and by `kamu render`, because where the piece came from —
+ * Shared by carving and by `ankou render`, because where the piece came from —
  * a model just now, or a JSON file from last week — makes no difference to
  * where it should go.
  */
@@ -300,7 +300,7 @@ main(process.argv.slice(2))
   })
   .catch((error: unknown) => {
     const ui = createUi(false)
-    if (error instanceof KamuError) ui.error(error.message, error.hint)
+    if (error instanceof AnkouError) ui.error(error.message, error.hint)
     else ui.error(error instanceof Error ? error.message : String(error))
     process.exitCode = 1
   })

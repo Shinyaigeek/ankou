@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-export interface KamuConfig {
+export interface AnkouConfig {
   provider?: string
   model?: string
   baseUrl?: string
@@ -15,10 +15,10 @@ export interface KamuConfig {
 
 export function configPath(): string {
   const base = process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config')
-  return join(base, 'kamu', 'config.json')
+  return join(base, 'ankou', 'config.json')
 }
 
-const KEYS: (keyof KamuConfig)[] = [
+const KEYS: (keyof AnkouConfig)[] = [
   'provider',
   'model',
   'baseUrl',
@@ -30,7 +30,7 @@ const KEYS: (keyof KamuConfig)[] = [
 ]
 
 export interface LoadedConfig {
-  config: KamuConfig
+  config: AnkouConfig
   /** What was wrong with the file. Reported, not fatal — see `loadConfig`. */
   problems: string[]
 }
@@ -101,5 +101,5 @@ export async function loadConfig(): Promise<LoadedConfig> {
       `${configPath()} has no setting \`${key}\`${guess ? ` — did you mean \`${guess}\`?` : '.'}`,
     )
   }
-  return { config: parsed as KamuConfig, problems }
+  return { config: parsed as AnkouConfig, problems }
 }

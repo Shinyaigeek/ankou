@@ -5,9 +5,9 @@ body:
   - type: textarea
     id: want
     attributes:
-      label: What you want out of a document that kamu cannot give you
+      label: What you want out of a document that ankou cannot give you
       description: |
-        kamu is built around intent — "I want to remember this", "I keep
+        ankou is built around intent — "I want to remember this", "I keep
         bouncing off this". Start there rather than at the implementation, and
         the shape of the feature usually falls out of it.
     validations:
@@ -39,7 +39,7 @@ body:
     attributes:
       label: Dependencies
       description: |
-        `kamu-core` has no runtime dependencies, and that is a feature. Anything
+        `ankou-core` has no runtime dependencies, and that is a feature. Anything
         that needs one has to argue for itself.
       options:
         - label: As far as I know this needs no new runtime dependency.

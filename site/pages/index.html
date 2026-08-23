@@ -1,35 +1,35 @@
 <section class="section hero">
   <div class="hero-grid">
     <div>
-      <p class="eyebrow">噛む — to chew</p>
-      <h1>Read it in the shape<br>you actually want<span class="kanji" aria-hidden="true">噛</span></h1>
+      <p class="eyebrow">鮟鱇 — the anglerfish</p>
+      <h1>Read it in the shape<br>you actually want<span class="kanji" aria-hidden="true">鮟</span></h1>
       <p class="lede">
-        You have a spec, a PDF, a long post. What you want out of it is not always
-        the text, top to bottom.
+        An anglerfish is too slippery to cut on a board. You hang it up and take it
+        apart from there — and every part goes out in the form that suits it.
       </p>
       <p>
-        kamu takes the sources <strong>and what you want out of them</strong>, picks
-        the shape, and gives it back as something you can actually read — a flipbook,
-        a deck, a quiz you have to pass, four seconds of kinetic type. One command,
-        or one call from your agent.
+        ankou does that to documents. It takes the sources <strong>and what you want
+        out of them</strong>, picks the shape, and gives it back as something you can
+        actually read — a flipbook, a deck, a quiz you have to pass, four seconds of
+        kinetic type. One command, or one call from your agent.
       </p>
       <div class="cta">
         <a class="btn primary" href="#install">Install it</a>
         <a class="btn" href="./formats.html">See what comes out</a>
-        <a class="btn" href="https://github.com/Shinyaigeek/kamu" rel="noreferrer">GitHub</a>
+        <a class="btn" href="https://github.com/Shinyaigeek/ankou" rel="noreferrer">GitHub</a>
       </div>
       <div class="badges">
-        <a href="https://github.com/Shinyaigeek/kamu/actions/workflows/ci.yml" rel="noreferrer"><img alt="CI status" src="https://github.com/Shinyaigeek/kamu/actions/workflows/ci.yml/badge.svg"></a>
+        <a href="https://github.com/Shinyaigeek/ankou/actions/workflows/ci.yml" rel="noreferrer"><img alt="CI status" src="https://github.com/Shinyaigeek/ankou/actions/workflows/ci.yml/badge.svg"></a>
       </div>
       <p class="muted" style="margin-top:.9rem;font-size:.92rem">
-        MIT · Node 22+ · <code>kamu-core</code> has no runtime dependencies
+        MIT · Node 22+ · <code>ankou-core</code> has no runtime dependencies
       </p>
     </div>
 
     <div class="stage" data-chooser>
       <div class="stage-head">
         <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span>kamu spec.md --intent …</span>
+        <span>ankou spec.md --intent …</span>
       </div>
       <div class="stage-body">
         <p class="stage-label">What you want out of it</p>
@@ -84,14 +84,14 @@
         <li>
           <h3>Install the CLI</h3>
           <p class="muted">
-            The unscoped <code>kamu</code> on npm is an unrelated package, hence the
-            scope — what it installs is still <code>kamu</code>.
+            One package, one command, no scope to remember. The SDK is a second
+            package if you would rather call it than run it.
           </p>
         </li>
         <li>
           <h3>Point it at a model</h3>
           <p class="muted">
-            Any of four providers, or none of them: <code>kamu providers</code> says
+            Any of four providers, or none of them: <code>ankou providers</code> says
             which are ready on this machine and what the rest are missing.
             <a href="./providers.html">All the routes →</a>
           </p>
@@ -109,14 +109,14 @@
 
     <div>
       <div class="code"><pre><code><span class="cm"># the CLI, globally</span>
-npm i -g @shinyaigeek/kamu
+npm i -g ankou
 
 <span class="cm"># the SDK, in a project</span>
-npm i @shinyaigeek/kamu-core
+npm i ankou-core
 
 <span class="cm"># or from a checkout — also how you develop on it</span>
-git clone https://github.com/Shinyaigeek/kamu.git
-cd kamu &amp;&amp; ./scripts/install-local.sh</code></pre></div>
+git clone https://github.com/Shinyaigeek/ankou.git
+cd ankou &amp;&amp; ./scripts/install-local.sh</code></pre></div>
 
       <div class="code"><pre><code><span class="cm"># whichever you have — the first key found wins</span>
 export ANTHROPIC_API_KEY=sk-...
@@ -124,15 +124,15 @@ export ANTHROPIC_API_KEY=sk-...
 <span class="cm"># or: --provider openai        OpenAI, OpenRouter, LM Studio, vLLM, Groq</span>
 <span class="cm"># or: --provider ollama        local, free, no network egress</span>
 
-kamu providers</code></pre></div>
+ankou providers</code></pre></div>
 
-      <div class="code"><pre><code>kamu spec.md -i <span class="hl">"一字一句漏らさず頭に入れたい"</span>
+      <div class="code"><pre><code>ankou spec.md -i <span class="hl">"一字一句漏らさず頭に入れたい"</span>
 <span class="cm"># → flipbook: plays the text back one character at a time, verbatim</span>
 
-kamu https://example.com/post -i <span class="hl">"I need to remember this"</span> --play
+ankou https://example.com/post -i <span class="hl">"I need to remember this"</span> --play
 <span class="cm"># → quiz, in your terminal</span>
 
-kamu paper.pdf notes.md -i <span class="hl">"explain it like I have never seen it"</span>
+ankou paper.pdf notes.md -i <span class="hl">"explain it like I have never seen it"</span>
 <span class="cm"># → dialogue: two voices working through it</span></code></pre></div>
       <p class="muted">
         Sources are file paths, URLs, or <code>-</code> for stdin. Markdown, text, HTML
@@ -167,26 +167,26 @@ kamu paper.pdf notes.md -i <span class="hl">"explain it like I have never seen i
     <div>
       <p>
         The middle artefact is a <strong>Piece</strong>: a typed, format-specific
-        structure. Renderers are pure functions of a Piece, so the same chewed result
+        structure. Renderers are pure functions of a Piece, so the same carved result
         can be played in a terminal, opened in a browser, or handed to another program
         as JSON without asking the model to do the work twice.
       </p>
       <p>
         Long documents are windowed, mapped per window and reduced, so a 200-page PDF
         and a 400-word post go down the same path. Where a provider supports tool use
-        or structured output, kamu uses it; where it does not, output is parsed,
+        or structured output, ankou uses it; where it does not, output is parsed,
         validated, and handed back with its own errors once.
       </p>
     </div>
     <div>
       <div class="code"><pre><code><span class="cm"># pay the model once…</span>
-kamu paper.pdf -i "覚えたい" --render json -o piece.json
+ankou paper.pdf -i "覚えたい" --render json -o piece.json
 
 <span class="cm"># …and render it as often as you like</span>
-kamu render piece.json --open
-kamu render piece.json --play</code></pre></div>
+ankou render piece.json --open
+ankou render piece.json --play</code></pre></div>
       <p class="muted">
-        <code>kamu render</code> touches no model and no network. The HTML it writes is
+        <code>ankou render</code> touches no model and no network. The HTML it writes is
         one self-contained file: no CDN, no fonts to fetch, no build step. It works
         offline, follows the reader's colour scheme, prints sensibly, and you can mail
         it to someone.
@@ -200,7 +200,7 @@ kamu render piece.json --play</code></pre></div>
     <p class="eyebrow">The output</p>
     <h2>Six shapes, all of them live on this site</h2>
     <p class="lede">
-      Every card below opens the real thing — rendered by kamu from a fixed source,
+      Every card below opens the real thing — rendered by ankou from a fixed source,
       embedded and playable. <a href="./formats.html">See them all in one place →</a>
     </p>
   </div>
@@ -261,7 +261,10 @@ kamu render piece.json --play</code></pre></div>
         by the renderer.
       </p>
       <div class="callout">
-        <p><strong>Fidelity is structural</strong>, not a promise the model has to keep.</p>
+        <p>
+          <strong>Fidelity is structural</strong>, not a promise the model has to keep.
+          Nothing is thrown away, because nothing was ever the model's to throw.
+        </p>
       </div>
       <p class="muted">
         The same instinct runs through the rest of it: the planner's menu is generated
@@ -277,7 +280,7 @@ kamu render piece.json --play</code></pre></div>
           <span class="grow"></span>
           <a href="./demo/flipbook.html" target="_blank" rel="noreferrer">open full ↗</a>
         </div>
-        <iframe src="./demo/flipbook.html" title="A kamu flipbook, rendered" loading="lazy"></iframe>
+        <iframe src="./demo/flipbook.html" title="A ankou flipbook, rendered" loading="lazy"></iframe>
       </div>
       <p class="muted" style="margin-top:.8rem">
         Click into the frame, then <kbd>space</kbd> to play, <kbd>↑</kbd><kbd>↓</kbd> for
@@ -294,7 +297,7 @@ kamu render piece.json --play</code></pre></div>
       <h3>Bring the model you already have</h3>
       <p class="muted">
         Anthropic, any OpenAI-compatible endpoint, Ollama on localhost, or a Claude Code
-        subscription with no API key at all. Or pass your own client and kamu bills
+        subscription with no API key at all. Or pass your own client and ankou bills
         through it.
       </p>
       <p class="card-more">Wiring up a provider →</p>
@@ -307,9 +310,9 @@ kamu render piece.json --play</code></pre></div>
         store the structure, and re-render it on any surface later — with progress
         events, cancellation, and errors that carry a hint.
       </p>
-      <p class="card-more">kamu as a tool call →</p>
+      <p class="card-more">ankou as a tool call →</p>
     </a>
-    <a class="card" href="https://github.com/Shinyaigeek/kamu/blob/main/docs/ARCHITECTURE.md" rel="noreferrer">
+    <a class="card" href="https://github.com/Shinyaigeek/ankou/blob/main/docs/ARCHITECTURE.md" rel="noreferrer">
       <p class="card-glyph">internals</p>
       <h3>No runtime dependencies</h3>
       <p class="muted">
@@ -327,7 +330,7 @@ kamu render piece.json --play</code></pre></div>
       <code>Piece</code> shapes may still move in a minor release. Every format has been
       run end to end against a real model, and the providers, the pipeline and the
       renderers are covered by <code>pnpm test</code>.
-      <a href="https://github.com/Shinyaigeek/kamu/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributions welcome</a>.
+      <a href="https://github.com/Shinyaigeek/ankou/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributions welcome</a>.
     </p>
   </div>
 </section>

@@ -1,6 +1,6 @@
 # SDK
 
-`npm i @shinyaigeek/kamu-core`, or work inside the checkout, where the workspace
+`npm i ankou-core`, or work inside the checkout, where the workspace
 resolves it to `packages/core` (see the README for the install).
 
 ESM, Node 22+, no runtime dependencies.
@@ -8,26 +8,26 @@ ESM, Node 22+, no runtime dependencies.
 ## The entry points
 
 ```ts
-import { chew, chewAndRender, chewPlan } from '@shinyaigeek/kamu-core'
+import { carve, carveAndRender, carvePlan } from 'ankou-core'
 
 // ingest → plan → compose. Returns the structure.
-const { piece, plan, documents } = await chew({ sources, intent })
+const { piece, plan, documents } = await carve({ sources, intent })
 
 // …and render in one call.
-const { piece, plan, output } = await chewAndRender({ sources, intent, renderer: 'html' })
+const { piece, plan, output } = await carveAndRender({ sources, intent, renderer: 'html' })
 
 // Just the decision: ingest → plan, and stop before anything is composed.
-const { plan, documents } = await chewPlan({ sources, intent })
+const { plan, documents } = await carvePlan({ sources, intent })
 ```
 
-All three take the same options. `chewPlan` is one cheap model call — it is what
+All three take the same options. `carvePlan` is one cheap model call — it is what
 `--plan-only` uses, and what to reach for when you want to show the reader what
 you are about to make, or route on the format before paying to generate it.
 
 ### Options
 
 ```ts
-interface ChewOptions {
+interface CarveOptions {
   intent: string                  // what the reader wants out of it
   sources: Source[]               // paths, URLs, or { content, name, kind }
   format?: FormatId               // skip the planner
@@ -43,13 +43,13 @@ interface ChewOptions {
 }
 ```
 
-With no `llm` and no `provider`, kamu reads `KAMU_PROVIDER`, then falls back to
+With no `llm` and no `provider`, ankou reads `ANKOU_PROVIDER`, then falls back to
 whichever API key is present, then to `OLLAMA_HOST`, and throws an actionable
 error if there is none. `providerStatus()` reports what each provider needs and
-whether it has it — it is what `kamu providers` prints:
+whether it has it — it is what `ankou providers` prints:
 
 ```ts
-import { providerStatus } from '@shinyaigeek/kamu-core'
+import { providerStatus } from 'ankou-core'
 
 for (const status of await providerStatus()) {
   status.id, status.defaultModel, status.ready, status.blocker
@@ -70,7 +70,7 @@ sources: [
 Ingest is available on its own if you only want normalised text:
 
 ```ts
-import { ingest, ingestAll } from '@shinyaigeek/kamu-core'
+import { ingest, ingestAll } from 'ankou-core'
 
 const document = await ingest('https://example.com/post')
 document.title, document.text, document.sections, document.lang
@@ -78,10 +78,10 @@ document.title, document.text, document.sections, document.lang
 
 ## Pieces
 
-`chew()` returns a `Piece`: a discriminated union on `format`, fully typed.
+`carve()` returns a `Piece`: a discriminated union on `format`, fully typed.
 
 ```ts
-const { piece } = await chew({ sources, intent, format: 'quiz' })
+const { piece } = await carve({ sources, intent, format: 'quiz' })
 if (piece.format === 'quiz') {
   for (const question of piece.questions) {
     question.prompt, question.choices, question.answer, question.explanation
@@ -95,7 +95,7 @@ another agent — and render it later without touching a model again.
 ## Rendering
 
 ```ts
-import { render, playTui } from '@shinyaigeek/kamu-core'
+import { render, playTui } from 'ankou-core'
 
 render(piece, 'html', { theme: 'dark' })   // { content, ext, mime, renderer }
 render(piece, 'json')
@@ -110,28 +110,28 @@ and is safe to run on a server for every request.
 ## Bringing your own model
 
 ```ts
-import type { LLM } from '@shinyaigeek/kamu-core'
+import type { LLM } from 'ankou-core'
 
 const myModel: LLM = {
   name: 'my-gateway:some-model',
   async complete({ system, prompt, maxTokens, temperature, signal }) {
     return await callMyGateway({ system, prompt, maxTokens, temperature, signal })
   },
-  // Optional. Omit it and kamu prompts for JSON, validates, and retries once
+  // Optional. Omit it and ankou prompts for JSON, validates, and retries once
   // with the validator's errors — which is enough for most models.
   async structured({ name, schema, prompt, system }) {
     return await callMyGatewayWithSchema({ name, schema, prompt, system })
   },
 }
 
-await chew({ sources, intent, llm: myModel })
+await carve({ sources, intent, llm: myModel })
 ```
 
 The built-in providers are also exported directly if you want to configure one
 and reuse it:
 
 ```ts
-import { anthropic, claudeCode, ollama, openai } from '@shinyaigeek/kamu-core'
+import { anthropic, claudeCode, ollama, openai } from 'ankou-core'
 
 const llm = openai({ baseUrl: 'http://localhost:1234/v1', model: 'local-model' })
 ```
@@ -141,7 +141,7 @@ const llm = openai({ baseUrl: 'http://localhost:1234/v1', model: 'local-model' }
 ```ts
 const controller = new AbortController()
 
-await chew({
+await carve({
   sources,
   intent,
   signal: controller.signal,
@@ -154,29 +154,29 @@ stage reports which window it is on.
 
 ## Errors
 
-Everything kamu throws deliberately is a `KamuError` with a `code`
+Everything ankou throws deliberately is a `AnkouError` with a `code`
 (`INGEST | LLM | COMPOSE | CONFIG`), a message, and usually a `hint` that says
 what to do about it.
 
 ```ts
-import { KamuError } from '@shinyaigeek/kamu-core'
+import { AnkouError } from 'ankou-core'
 
 try {
-  await chew({ sources, intent })
+  await carve({ sources, intent })
 } catch (error) {
-  if (error instanceof KamuError) console.error(error.message, error.hint)
+  if (error instanceof AnkouError) console.error(error.message, error.hint)
   else throw error
 }
 ```
 
 ## Embedding: a worked example
 
-Wiring kamu into a chat agent as a tool. The agent already knows what the user
+Wiring ankou into a chat agent as a tool. The agent already knows what the user
 asked for, so it passes that straight through as the intent, and returns HTML for
 the client to render inline.
 
 ```ts
-import { chewAndRender, FORMAT_IDS } from '@shinyaigeek/kamu-core'
+import { carveAndRender, FORMAT_IDS } from 'ankou-core'
 
 export const readTool = {
   name: 'reshape_document',
@@ -188,13 +188,13 @@ export const readTool = {
     properties: {
       sources: { type: 'array', items: { type: 'string' } },
       intent: { type: 'string', description: "What the user wants out of it, in their words." },
-      format: { type: 'string', enum: FORMAT_IDS, description: 'Optional; omit to let kamu choose.' },
+      format: { type: 'string', enum: FORMAT_IDS, description: 'Optional; omit to let ankou choose.' },
     },
     required: ['sources', 'intent'],
   },
 
   async run({ sources, intent, format }, { signal }) {
-    const { piece, plan, output } = await chewAndRender({
+    const { piece, plan, output } = await carveAndRender({
       sources,
       intent,
       ...(format ? { format } : {}),
@@ -214,7 +214,7 @@ export const readTool = {
 
 Notes for that setup:
 
-- **Reuse the host's model.** Pass `llm` rather than `provider` so kamu bills and
+- **Reuse the host's model.** Pass `llm` rather than `provider` so ankou bills and
   rate-limits through the same client as the rest of the app.
 - **Store the `Piece`, not the HTML.** It is smaller, it is queryable, and every
   other renderer is one pure call away.

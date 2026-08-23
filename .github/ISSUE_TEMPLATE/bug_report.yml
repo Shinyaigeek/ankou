@@ -1,5 +1,5 @@
 name: Bug report
-description: Something kamu did that it should not have done
+description: Something ankou did that it should not have done
 labels: [bug]
 body:
   - type: markdown
@@ -14,7 +14,7 @@ body:
       label: What you ran
       description: The full command, including `--intent`.
       render: shell
-      placeholder: kamu spec.md --intent "一字一句漏らさず頭に入れたい" --format flipbook
+      placeholder: ankou spec.md --intent "一字一句漏らさず頭に入れたい" --format flipbook
     validations:
       required: true
 
@@ -60,7 +60,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: '`kamu --version`, `node --version`, and your OS.'
+      description: '`ankou --version`, `node --version`, and your OS.'
       render: shell
     validations:
       required: true

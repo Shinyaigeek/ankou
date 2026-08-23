@@ -1,6 +1,6 @@
-# Contributing to kamu
+# Contributing to ankou
 
-Thanks for taking the time. kamu is a pnpm monorepo of two packages, and the bar
+Thanks for taking the time. ankou is a pnpm monorepo of two packages, and the bar
 for a change is: it builds, it type-checks, it passes lint, and the suite stays
 green.
 
@@ -38,7 +38,7 @@ pnpm test        # every package's suite: the pipeline against a stub model,
 
 - `packages/core` is the engine and the published SDK. `packages/cli` is a thin
   wrapper: argument parsing, config, progress output, file writing.
-- **`kamu-core` has no runtime dependencies, and that is a feature.** A change
+- **`ankou-core` has no runtime dependencies, and that is a feature.** A change
   that adds one needs to argue for itself in the PR. PDF support and the Claude
   Agent SDK are optional peers, imported lazily, and everything else works
   without them.
@@ -65,7 +65,7 @@ Prompts are code here. If you change one:
   output.
 
 The test suite runs against a stub model, so it proves the shapes hold and says
-nothing about whether a real model fills them well. `.claude/skills/kamu/` drives
+nothing about whether a real model fills them well. `.claude/skills/ankou/` drives
 a real run end to end — which provider to reach for, how to check the result, and
 what each failure means — if you work with Claude Code.
 

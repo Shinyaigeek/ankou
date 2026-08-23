@@ -85,7 +85,7 @@ const SCRIPT = `
 ${READ_DATA}
 (function () {
   var seg = null;
-  try { seg = new Intl.Segmenter(KAMU.lang || undefined, { granularity: 'grapheme' }); } catch (e) {}
+  try { seg = new Intl.Segmenter(ANKOU.lang || undefined, { granularity: 'grapheme' }); } catch (e) {}
   function split(text) {
     if (!seg) return Array.from(text);
     var out = [];
@@ -101,7 +101,7 @@ ${READ_DATA}
   // is the source text, untouched: only the annotations come from the model.
   var tape = [];
   var chapterStarts = [];
-  KAMU.chapters.forEach(function (chapter, ci) {
+  ANKOU.chapters.forEach(function (chapter, ci) {
     chapterStarts.push(tape.length);
     var chars = split(chapter.text);
     var weights = new Array(chars.length).fill(0);
@@ -125,13 +125,13 @@ ${READ_DATA}
       }
     }
 
-    (KAMU.emphasis || []).forEach(function (item) {
+    (ANKOU.emphasis || []).forEach(function (item) {
       mark(item.term, function (start, end) {
         for (var i = start; i <= end; i++) weights[i] = Math.max(weights[i], item.weight || 1);
         if (item.gloss) rubies[start] = rubies[start] || { gloss: item.gloss };
       });
     });
-    (KAMU.ruby || []).forEach(function (item) {
+    (ANKOU.ruby || []).forEach(function (item) {
       mark(item.term, function (start) {
         rubies[start] = Object.assign(rubies[start] || {}, { reading: item.reading });
       });
@@ -142,7 +142,7 @@ ${READ_DATA}
     });
   });
 
-  var pacing = KAMU.pacing || { baseMs: 55, punctuationMs: 330, paragraphMs: 660 };
+  var pacing = ANKOU.pacing || { baseMs: 55, punctuationMs: 330, paragraphMs: 660 };
   var state = { at: 0, playing: false, rate: 1, timer: null };
 
   var el = {
@@ -191,7 +191,7 @@ ${READ_DATA}
       el.gloss.className = 'fb-gloss';
     }
     el.context.innerHTML = contextHtml(state.at);
-    el.title.textContent = KAMU.chapters[unit.ci] ? KAMU.chapters[unit.ci].title : '';
+    el.title.textContent = ANKOU.chapters[unit.ci] ? ANKOU.chapters[unit.ci].title : '';
     el.counter.textContent = (state.at + 1) + ' / ' + tape.length;
     el.bar.style.width = ((state.at + 1) / tape.length * 100) + '%';
     Array.prototype.forEach.call(el.chapters.querySelectorAll('button'), function (button, index) {
@@ -247,7 +247,7 @@ ${READ_DATA}
     el.speed.textContent = state.rate.toFixed(2) + 'x';
   }
 
-  KAMU.chapters.forEach(function (chapter, index) {
+  ANKOU.chapters.forEach(function (chapter, index) {
     var button = document.createElement('button');
     button.type = 'button';
     button.textContent = (index + 1) + '. ' + (chapter.title || 'Part ' + (index + 1));
@@ -284,7 +284,7 @@ ${READ_DATA}
     if (printed) return;
     printed = true;
     var sheet = document.querySelector('.fb-print');
-    KAMU.chapters.forEach(function (chapter, index) {
+    ANKOU.chapters.forEach(function (chapter, index) {
       if (chapter.title) {
         var heading = document.createElement('h2');
         heading.textContent = chapter.title;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { chew } from '../dist/index.js'
+import { carve } from '../dist/index.js'
 
 const SOURCE = `# Widget Protocol
 
@@ -40,7 +40,7 @@ function stubLlm(draft: unknown = DRAFT) {
 }
 
 async function quizFrom(draft?: unknown) {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE, name: 'protocol.md' }],
     intent: 'quiz me',
     format: 'quiz',

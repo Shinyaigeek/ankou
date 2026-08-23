@@ -40,7 +40,7 @@ export function kindFromMime(mime: string): SourceKind | undefined {
 /**
  * Types that are certainly not text. Anything else — `application/octet-stream`
  * for a markdown file, or no type at all — is given the benefit of the doubt,
- * which is how most of the web serves things kamu can read.
+ * which is how most of the web serves things ankou can read.
  */
 const NOT_TEXT = /^(image|audio|video|font)\//i
 
@@ -74,7 +74,7 @@ export interface IngestOptions {
   encoding?: string
 }
 
-const DEFAULT_UA = 'kamu/0.1 (+https://github.com/Shinyaigeek/kamu) reader-bot'
+const DEFAULT_UA = 'ankou/0.1 (+https://github.com/Shinyaigeek/ankou) reader-bot'
 
 /** Follow a `<meta http-equiv="refresh">` hop, which HTTP redirects do not cover. */
 function metaRefreshTarget(html: string, base: string): string | undefined {
@@ -111,7 +111,7 @@ async function ingestUrl(
   try {
     // Raced, not only signalled. `fetchImpl` is a documented extension point,
     // and one that ignores the signal — a mock, a proxy, an older client —
-    // would otherwise hold kamu open for as long as it liked. The abort still
+    // would otherwise hold ankou open for as long as it liked. The abort still
     // fires alongside, to let go of the socket.
     const response = await Promise.race([
       doFetch(url, {
@@ -130,7 +130,7 @@ async function ingestUrl(
     if (NOT_TEXT.test(mime.split(';')[0]!.trim())) {
       throw ingestError(
         `${url} is ${mime.split(';')[0]!.trim()}, which has no text in it.`,
-        'kamu reads markdown, plain text, HTML and PDF.',
+        'ankou reads markdown, plain text, HTML and PDF.',
       )
     }
     const kind = kindFromMime(mime) ?? 'html'

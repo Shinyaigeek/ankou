@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { languageName } from '../dist/formats/base.js'
 import {
-  chew,
-  chewPlan,
+  AnkouError,
+  carve,
+  carvePlan,
   FORMAT_IDS,
   FORMATS,
   isPiece,
-  KamuError,
   plan as makePlan,
   pieceProblems,
   RENDERERS,
@@ -29,7 +29,7 @@ const SOURCE = `# 契約書の第一条
 本契約の有効期間は、締結日から一年間とする。`
 
 /**
- * A stub model that answers every schema kamu asks for. It lets the whole
+ * A stub model that answers every schema ankou asks for. It lets the whole
  * pipeline run in tests without a network call, and it doubles as a check that
  * each format survives a model that gives the bare minimum.
  */
@@ -132,7 +132,7 @@ function stubLlm(): {
 
 test('every format composes and renders through all renderers', async () => {
   for (const format of FORMAT_IDS) {
-    const { piece, plan } = await chew({
+    const { piece, plan } = await carve({
       sources: [{ content: SOURCE, name: 'contract.md' }],
       intent: 'ちゃんと読みたい',
       format,
@@ -154,12 +154,12 @@ test('every format composes and renders through all renderers', async () => {
     assert.equal(json.format, format)
 
     const tui = renderTuiText(piece, { columns: 60, colour: false })
-    assert.ok(tui.includes('chewed by kamu'))
+    assert.ok(tui.includes('carved by ankou'))
   }
 })
 
 test('flipbook reproduces the source verbatim', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE, name: 'contract.md' }],
     intent: '一字一句読みたい',
     format: 'flipbook',
@@ -189,7 +189,7 @@ test('the planner is skipped when a format is given', async () => {
       return llm.structured<T>(request)
     },
   }
-  await chew({
+  await carve({
     sources: [{ content: SOURCE }],
     intent: 'x',
     format: 'quiz',
@@ -198,7 +198,7 @@ test('the planner is skipped when a format is given', async () => {
   assert.equal(planned, false)
 })
 
-test('chewPlan decides the shape without composing it', async () => {
+test('carvePlan decides the shape without composing it', async () => {
   const llm = stubLlm()
   const asked: string[] = []
   const spy = {
@@ -209,7 +209,7 @@ test('chewPlan decides the shape without composing it', async () => {
     },
   }
 
-  const { plan, documents } = await chewPlan({
+  const { plan, documents } = await carvePlan({
     sources: [{ content: SOURCE, name: 'contract.md' }],
     intent: '要点だけ知りたい',
     llm: spy as never,
@@ -217,12 +217,12 @@ test('chewPlan decides the shape without composing it', async () => {
 
   assert.equal(plan.format, 'summary')
   assert.equal(documents[0]?.title, '契約書の第一条')
-  // Composing is what costs; asking what kamu *would* make must not pay for it.
+  // Composing is what costs; asking what ankou *would* make must not pay for it.
   assert.deepEqual(asked, ['reading_plan'])
 })
 
 test('the planner runs and its choice is used when no format is given', async () => {
-  const { piece, plan } = await chew({
+  const { piece, plan } = await carve({
     sources: [{ content: SOURCE }],
     intent: '要点だけ知りたい',
     llm: stubLlm() as never,
@@ -233,7 +233,7 @@ test('the planner runs and its choice is used when no format is given', async ()
 })
 
 test('html output escapes markup coming from the source', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [
       { content: '<script>alert(1)</script> plain words here', name: 'x.txt', kind: 'text' },
     ],
@@ -250,7 +250,7 @@ test('the output language follows the intent when the intent has one', async () 
   const english = 'The quick brown fox jumps over the lazy dog. '.repeat(20)
 
   // Japanese intent over an English source: the reader asked in Japanese.
-  const ja = await chew({
+  const ja = await carve({
     sources: [{ content: english, kind: 'text' }],
     intent: '覚えたいのでテストして',
     format: 'quiz',
@@ -259,7 +259,7 @@ test('the output language follows the intent when the intent has one', async () 
   assert.equal(ja.piece.lang, 'ja')
 
   // An English-looking intent carries no signal, so the source decides.
-  const inherited = await chew({
+  const inherited = await carve({
     sources: [{ content: SOURCE, name: 'contract.md' }],
     intent: 'quiz me',
     format: 'quiz',
@@ -314,7 +314,7 @@ test('quiz questions come out gradeable however the model labelled them', async 
     },
   }
 
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE }],
     intent: '覚えたい',
     format: 'quiz',
@@ -360,7 +360,7 @@ test('dialogue turns land on a real speaker even when the model drifts', async (
     },
   }
 
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE }],
     intent: '解説してほしい',
     format: 'dialogue',
@@ -419,8 +419,8 @@ test('a format refuses to hand back an empty piece', async () => {
     // Flipbook's body is the source, not the model, so starve it of the source.
     const sources = format === 'flipbook' ? [{ content: '   \n\n  ' }] : [{ content: SOURCE }]
     await assert.rejects(
-      () => chew({ sources, intent: 'x', format, llm: exhausted as never }),
-      (error: unknown) => error instanceof KamuError,
+      () => carve({ sources, intent: 'x', format, llm: exhausted as never }),
+      (error: unknown) => error instanceof AnkouError,
       `${format} rendered an empty piece instead of failing`,
     )
   }
@@ -430,7 +430,7 @@ test('a piece survives a round trip through JSON and renders again', async () =>
   // The claim the whole Piece boundary exists to make: one model call, many
   // surfaces, including surfaces chosen long after the model has gone home.
   for (const format of FORMAT_IDS) {
-    const { piece } = await chew({
+    const { piece } = await carve({
       sources: [{ content: SOURCE, name: 'contract.md' }],
       intent: 'ちゃんと読みたい',
       format,
@@ -467,9 +467,9 @@ test('isPiece rejects a piece the renderers could not render', () => {
   ])
 })
 
-test('every piece kamu composes passes its own check, and then renders', async () => {
+test('every piece ankou composes passes its own check, and then renders', async () => {
   for (const format of FORMAT_IDS) {
-    const { piece } = await chew({
+    const { piece } = await carve({
       sources: [{ content: SOURCE }],
       intent: 'x',
       format,
@@ -484,7 +484,7 @@ test('every piece kamu composes passes its own check, and then renders', async (
 })
 
 test('the deck answers a hash that arrives after it has loaded', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE }],
     intent: 'x',
     format: 'slides',
@@ -508,7 +508,7 @@ test('every knob a format declares is one the planner is allowed to set', async 
       return stubLlm().structured<T>(request)
     },
   }
-  await chew({ sources: [{ content: SOURCE }], intent: '要点', llm: capture as never })
+  await carve({ sources: [{ content: SOURCE }], intent: '要点', llm: capture as never })
 
   const allowed = planSchema.properties.params.properties
   for (const id of FORMAT_IDS) {
@@ -520,7 +520,7 @@ test('every knob a format declares is one the planner is allowed to set', async 
 })
 
 test('the flipbook carries its whole text into the page, not just the stage', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE, name: 'contract.md' }],
     intent: '一字一句読みたい',
     format: 'flipbook',
@@ -545,7 +545,7 @@ test('the flipbook carries its whole text into the page, not just the stage', as
 })
 
 test('the animation puts every scene on paper, since paper cannot move', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE }],
     intent: 'make it land',
     format: 'animation',
@@ -607,7 +607,7 @@ test('the planner is shown an outline, not an author list', async () => {
 })
 
 test('the theme is settled in the head, before anything is painted', async () => {
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [{ content: SOURCE }],
     intent: 'x',
     format: 'summary',
@@ -619,13 +619,13 @@ test('the theme is settled in the head, before anything is painted', async () =>
   // At the end of <body> this arrived after the browser had already painted a
   // screenful in the system theme: measured on a 190KB page, a dark frame at
   // 1951 nodes and the reader's stored light theme at 2489.
-  assert.ok(head.includes('kamu-theme'), 'the stored theme is read too late to matter')
+  assert.ok(head.includes('ankou-theme'), 'the stored theme is read too late to matter')
   assert.ok(
-    head.includes('kamuToggleTheme'),
+    head.includes('ankouToggleTheme'),
     'the toggle is defined after the button that calls it',
   )
   assert.ok(
-    html.indexOf('kamu-theme') < html.indexOf('<body>'),
+    html.indexOf('ankou-theme') < html.indexOf('<body>'),
     'the theme script is below the body',
   )
 })
@@ -642,7 +642,7 @@ test('a knob that is not a number falls back instead of poisoning the prompt', a
     },
   }
   const slideCountIn = async (slideCount: unknown) => {
-    await chew({
+    await carve({
       sources: [{ content: SOURCE }],
       intent: 'x',
       format: 'slides',
@@ -676,13 +676,13 @@ test('an empty source is refused before a model is asked to imagine one', async 
 
   await assert.rejects(
     () =>
-      chew({
+      carve({
         sources: [{ content: '   \n\n\t\n', name: 'blank.md' }],
         intent: 'summarise it',
         format: 'summary',
         llm: counting as never,
       }),
-    (error: unknown) => error instanceof KamuError && /no text in/.test((error as Error).message),
+    (error: unknown) => error instanceof AnkouError && /no text in/.test((error as Error).message),
   )
   // The point is that it costs nothing: a model handed nothing writes a summary
   // of the document it imagines you meant, and `requireContent` cannot catch
@@ -690,7 +690,7 @@ test('an empty source is refused before a model is asked to imagine one', async 
   assert.equal(asked, 0, 'a model was asked about an empty source')
 
   // One empty source among several is not the same thing.
-  const { piece } = await chew({
+  const { piece } = await carve({
     sources: [
       { content: '  ', name: 'blank.md' },
       { content: SOURCE, name: 'real.md' },
@@ -724,7 +724,7 @@ test('the prompt names the language, rather than reciting its tag', async () => 
       return llm.structured<T>(request)
     },
   }
-  await chew({
+  await carve({
     sources: [{ content: SOURCE }],
     intent: 'x',
     format: 'dialogue',
